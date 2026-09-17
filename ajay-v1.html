@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AJAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#ffffff;
+    --ink:#0a0a0a;
+    --grey:#6b6b6b;
+    --hair:#e2e2e2;
+    --blue:#0e1f4d;
+    --gold:#c9a227;
+    --red:#a6192e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--white);
+    color:var(--ink);
+    font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    font-size:13.5px;
+    line-height:1.5;
+    padding:36px 18px 70px;
+  }
+  svg{display:block;}
+  .wrap{max-width:420px;margin:0 auto;}
+
+  header{margin-bottom:28px;}
+  h1{font-size:20px;font-weight:700;color:var(--blue);letter-spacing:0.5px;}
+  h1 span{color:var(--gold);}
+  .sub{color:var(--grey);font-size:11px;margin-top:4px;}
+
+  .tabs{display:flex;margin-bottom:22px;border-bottom:1.5px solid var(--hair);}
+  .tab{
+    flex:1;text-align:center;padding:10px 0;cursor:pointer;
+    color:var(--grey);font-size:12px;font-weight:600;letter-spacing:0.5px;
+    border-bottom:2px solid transparent;margin-bottom:-1.5px;
+  }
+  .tab.active{color:var(--blue);border-bottom-color:var(--gold);}
+
+  .section{display:none;}
+  .section.active{display:block;}
+
+  .field{margin-bottom:16px;}
+  label{
+    display:block;font-size:10.5px;color:var(--blue);font-weight:700;
+    letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;
+  }
+
+  input[type=file]{
+    width:100%;font-size:11.5px;color:var(--grey);
+    border:1px solid var(--hair);border-radius:5px;padding:9px;background:var(--white);
+  }
+  input[type=file]::file-selector-button{
+    font-family:inherit;font-size:11px;font-weight:700;color:var(--white);
+    background:var(--blue);border:none;border-radius:4px;padding:6px 11px;
+    margin-right:9px;cursor:pointer;
+  }
+
+  input[type=number], textarea{
+    width:100%;padding:10px 12px;background:var(--white);
+    border:1px solid var(--hair);border-radius:5px;color:var(--ink);
+    font-family:inherit;font-size:12.5px;
+  }
+  textarea{min-height:84px;font-size:10.5px;resize:vertical;line-height:1.6;}
+  input:focus, textarea:focus{outline:none;border-color:var(--blue);}
+  ::placeholder{color:#b0b0b0;}
+
+  .filename{font-size:10.5px;color:var(--blue);margin-top:7px;font-weight:600;}
+  .or{text-align:center;color:var(--grey);font-size:9.5px;letter-spacing:1.5px;margin:11px 0;text-transform:uppercase;}
+
+  .modetoggle{display:flex;gap:8px;}
+  .modeopt{flex:1;position:relative;cursor:pointer;}
+  .modeopt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .modeopt-body{display:block;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;}
+  .modeopt input:checked + .modeopt-body{border-color:var(--gold);border-width:1.5px;}
+  .modeopt-title{display:block;font-size:11.5px;font-weight:700;color:var(--blue);}
+  .modeopt-desc{display:block;font-size:9.5px;color:var(--grey);margin-top:2px;}
+
+  button{
+    width:100%;padding:12px;margin-top:6px;background:var(--blue);color:var(--white);
+    border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;
+    letter-spacing:0.5px;cursor:pointer;
+  }
+  button:hover{opacity:0.92;}
+  button:disabled{background:#c9c9c9;color:#8a8a8a;cursor:not-allowed;}
+
+  .result{display:none;margin-top:18px;padding-top:18px;border-top:1.5px solid var(--hair);}
+  .result.show{display:block;}
+  .result .label{font-size:9.5px;color:var(--grey);letter-spacing:1.5px;margin-bottom:9px;text-transform:uppercase;}
+
+  .dl{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 13px;margin-bottom:8px;background:var(--white);
+    border:1.5px solid var(--gold);border-radius:6px;
+    color:var(--blue);text-decoration:none;font-size:11.5px;font-weight:700;
+  }
+  .dl:hover{background:#fbf6e4;}
+
+  .msg{display:none;font-size:11px;margin-top:12px;padding:10px 12px;border-radius:6px;line-height:1.5;}
+  .msg.show{display:block;}
+  .msg.ok{background:#fbf6e4;color:#7a5f10;border:1px solid var(--gold);}
+  .msg.err{background:#fbeaec;color:var(--red);border:1px solid var(--red);}
+
+  .reset{
+    display:block;width:100%;margin-top:32px;padding:10px;background:none;
+    border:1px solid var(--hair);color:var(--grey);font-family:inherit;
+    font-size:10px;font-weight:700;letter-spacing:1px;border-radius:6px;
+    cursor:pointer;text-transform:uppercase;
+  }
+  .reset:hover{border-color:var(--red);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>AJAY<span>.</span></h1>
+    <div class="sub">jpg / jpeg / png &middot; the key stays with you</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-t="e">Encrypt</div>
+    <div class="tab" data-t="d">Decrypt</div>
+  </div>
+
+  <!-- ENCRYPT -->
+  <div class="section active" id="sec-e">
+    <div class="field">
+      <label>Image (jpg / jpeg / png)</label>
+      <input type="file" id="e-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+      <div class="filename" id="e-fname"></div>
+    </div>
+
+    <div class="field">
+      <label>Positions to scramble</label>
+      <input type="number" id="e-count" value="512" min="1">
+    </div>
+
+    <div class="field">
+      <label>Mode</label>
+      <div class="modetoggle" style="display:block;">
+        <div class="modeopt-body">
+          <span class="modeopt-title">Merged</span>
+          <span class="modeopt-desc">each position independently replaced or deleted (~50/50) &mdash; single pass, no shift/size choice needed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Marker</label>
+      <div class="modetoggle" style="display:block;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;">
+          <input type="checkbox" id="e-marker" checked style="width:auto;margin:0;cursor:pointer;">
+          <span style="font-size:11px;color:var(--grey);">Add "AJAY" marker (identifies file as encrypted — recommended)</span>
+        </label>
+      </div>
+    </div>
+
+    <button id="e-run">Encrypt</button>
+    <div class="msg" id="e-msg"></div>
+
+    <div class="result" id="e-result">
+      <div class="label">Output</div>
+      <a class="dl" id="e-dl-file" download>Encrypted file &darr;</a>
+      <a class="dl" id="e-dl-key" download>Key (.txt) &darr;</a>
+    </div>
+  </div>
+
+  <!-- DECRYPT -->
+  <div class="section" id="sec-d">
+    <div class="field">
+      <label>File</label>
+      <input type="file" id="d-file">
+      <div class="filename" id="d-fname"></div>
+    </div>
+
+    <div class="field">
+      <label>Key</label>
+      <textarea id="d-key" placeholder="paste key text"></textarea>
+      <div class="or">or</div>
+      <input type="file" id="d-keyfile" accept=".txt">
+    </div>
+
+    <button id="d-run">Decrypt</button>
+    <div class="msg" id="d-msg"></div>
+
+    <div class="result" id="d-result">
+      <div class="label">Output</div>
+      <a class="dl" id="d-dl-file" download>Restored file &darr;</a>
+    </div>
+  </div>
+
+  <button class="reset" id="reset">Reset session</button>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const MARKER = new Uint8Array([0x41,0x4A,0x41,0x59]); // "AJAY"
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      $('sec-'+t.dataset.t).classList.add('active');
+    });
+  });
+
+  function showMsg(el, text, kind){
+    el.textContent = text;
+    el.className = 'msg show ' + kind;
+  }
+  function clearMsg(el){ el.className='msg'; el.textContent=''; }
+
+  function secureRandInt(max){
+    const arr = new Uint32Array(1);
+    const limit = Math.floor(0xFFFFFFFF / max) * max;
+    let x;
+    do { crypto.getRandomValues(arr); x = arr[0]; } while (x >= limit);
+    return x % max;
+  }
+
+  // ---------- key mechanism v2: 256-bit random session key + HMAC-SHA256
+  // keystream (Web Crypto). Unlike the old FNV-fold approach, every key
+  // byte is mixed by a proper cryptographic primitive with a full 256-bit
+  // internal state — no collapse to a small brute-forceable state space. ----------
+  function newMasterKey(){
+    const k = new Uint8Array(32); // 256-bit
+    crypto.getRandomValues(k);
+    return k;
+  }
+  function bytesToHex(b){
+    let s = '';
+    for(let i=0;i<b.length;i++) s += b[i].toString(16).padStart(2,'0');
+    return s;
+  }
+  function hexToBytes(hex){
+    hex = hex.trim();
+    const out = new Uint8Array(hex.length/2);
+    for(let i=0;i<out.length;i++) out[i] = parseInt(hex.substr(i*2,2),16);
+    return out;
+  }
+
+  const BLOCK_SIZE = 32; // one SHA-256 HMAC output = 32 keystream bytes per block
+
+  async function importHmacKey(masterKey){
+    return crypto.subtle.importKey(
+      'raw', masterKey, {name:'HMAC', hash:'SHA-256'}, false, ['sign']
+    );
+  }
+
+  async function hmacBlock(cryptoKey, blockIndex){
+    const idxBuf = new Uint8Array(4);
+    idxBuf[0] = (blockIndex >>> 24) & 0xFF;
+    idxBuf[1] = (blockIndex >>> 16) & 0xFF;
+    idxBuf[2] = (blockIndex >>> 8) & 0xFF;
+    idxBuf[3] = blockIndex & 0xFF;
+    const sig = await crypto.subtle.sign('HMAC', cryptoKey, idxBuf);
+    return new Uint8Array(sig); // 32 bytes
+  }
+
+  // Precomputes and caches every HMAC block needed for a list of positions,
+  // so the actual encrypt/decrypt loop can look up keystream bytes
+  // synchronously afterward instead of awaiting per-byte.
+  async function buildKeystreamCache(masterKey, positions){
+    const cryptoKey = await importHmacKey(masterKey);
+    const neededBlocks = new Set();
+    for(const pos of positions) neededBlocks.add(Math.floor(pos / BLOCK_SIZE));
+    const blockIndices = Array.from(neededBlocks);
+    const blocks = await Promise.all(blockIndices.map(bi => hmacBlock(cryptoKey, bi)));
+    const cache = new Map();
+    for(let i=0;i<blockIndices.length;i++) cache.set(blockIndices[i], blocks[i]);
+    return {
+      byte(position){
+        const blockIndex = Math.floor(position / BLOCK_SIZE);
+        const offset = position % BLOCK_SIZE;
+        const block = cache.get(blockIndex);
+        if(!block) throw new Error('keystream block not precomputed for position '+position);
+        return block[offset];
+      }
+    };
+  }
+
+  // ---------- format detection + metadata (dimension) byte locations ----------
+  function detectFormat(bytes){
+    if(bytes.length>=8 && bytes[0]===0x89 && bytes[1]===0x50 && bytes[2]===0x4E && bytes[3]===0x47 &&
+       bytes[4]===0x0D && bytes[5]===0x0A && bytes[6]===0x1A && bytes[7]===0x0A) return 'png';
+    if(bytes.length>=3 && bytes[0]===0xFF && bytes[1]===0xD8 && bytes[2]===0xFF) return 'jpeg';
+    return null;
+  }
+
+  function pngMetadataPositions(bytes){
+    // walk every chunk; force-scramble IHDR's dimension/bitdepth/colortype
+    // fields plus the ENTIRE payload of every ancillary chunk (first byte
+    // of the 4-char type is lowercase per the PNG spec — covers tEXt,
+    // iTXt, eXIf, and vendor/private chunks like caBX/C2PA blocks too).
+    const forced = [];
+    if(bytes.length < 8) return forced;
+    let pos = 8;
+    while(pos + 8 <= bytes.length){
+      const length = ((bytes[pos]<<24) | (bytes[pos+1]<<16) | (bytes[pos+2]<<8) | bytes[pos+3]) >>> 0;
+      const t0 = bytes[pos+4], t1 = bytes[pos+5], t2 = bytes[pos+6], t3 = bytes[pos+7];
+      const dataStart = pos + 8;
+      const dataEnd = dataStart + length;
+      if(dataEnd + 4 > bytes.length) break; // malformed/truncated — stop walking
+      const isIHDR = (t0===0x49 && t1===0x48 && t2===0x44 && t3===0x52); // "IHDR"
+      const isIEND = (t0===0x49 && t1===0x45 && t2===0x4E && t3===0x44); // "IEND"
+      if(isIHDR){
+        for(let i=dataStart; i<dataStart+10 && i<dataEnd; i++) forced.push(i);
+      } else if((t0 & 0x20) !== 0){
+        // ancillary chunk — bit 5 of the first type byte is set (lowercase)
+        for(let i=dataStart; i<dataEnd; i++) forced.push(i);
+      }
+      pos = dataEnd + 4; // skip CRC
+      if(isIEND) break;
+    }
+    return forced;
+  }
+
+  function jpegMetadataPositions(bytes){
+    // walk every segment; force-scramble the SOF height/width fields plus
+    // the ENTIRE payload of every APPn (0xE0-0xEF, covers EXIF/XMP/C2PA)
+    // and COM (0xFE) segment.
+    const forced = [];
+    const SOF = new Set([0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF]);
+    let i = 2;
+    while(i < bytes.length - 1){
+      if(bytes[i] !== 0xFF){ i++; continue; }
+      const marker = bytes[i+1];
+      if(marker===0xD8 || marker===0x01 || (marker>=0xD0 && marker<=0xD7)){ i+=2; continue; }
+      if(marker===0xD9) break; // EOI
+      if(i+3 >= bytes.length) break;
+      const len = (bytes[i+2]<<8) | bytes[i+3];
+      const dataStart = i+4;
+      const dataEnd = i+2+len; // length field counts itself, so segment ends here
+      if(SOF.has(marker)){
+        forced.push(dataStart+1, dataStart+2, dataStart+3, dataStart+4); // height(2)+width(2)
+      }
+      if((marker>=0xE0 && marker<=0xEF) || marker===0xFE){
+        for(let p=dataStart; p<dataEnd && p<bytes.length; p++) forced.push(p);
+      }
+      if(marker===0xDA) break; // start-of-scan — no more header segments after this
+      i = dataEnd;
+    }
+    return forced;
+  }
+
+  function metadataPositions(bytes, format){
+    if(format==='png') return pngMetadataPositions(bytes);
+    if(format==='jpeg') return jpegMetadataPositions(bytes);
+    return [];
+  }
+
+  // ---------- ENCRYPT ----------
+  let eBytes = null, eName = '', eFormat = null;
+  $('e-file').addEventListener('change', async e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    const format = detectFormat(bytes);
+    if(!format){
+      showMsg($('e-msg'), 'Only jpg, jpeg or png files are supported.', 'err');
+      e.target.value = '';
+      eBytes = null; eFormat = null; $('e-fname').textContent = '';
+      return;
+    }
+    clearMsg($('e-msg'));
+    eBytes = bytes; eName = f.name; eFormat = format;
+    $('e-fname').textContent = f.name + '  ·  ' + eBytes.length.toLocaleString() + ' bytes  ·  ' + format;
+    $('e-result').classList.remove('show');
+  });
+
+  $('e-run').addEventListener('click', async ()=>{
+    const msg = $('e-msg'); clearMsg(msg);
+    if(!eBytes){ showMsg(msg,'Choose a jpg/jpeg/png file first.','err'); return; }
+    let count = parseInt($('e-count').value,10);
+    if(!count || count<1){ showMsg(msg,'Enter a valid count.','err'); return; }
+    if(count > eBytes.length){ showMsg(msg,`File only has ${eBytes.length} bytes.`,'err'); return; }
+
+    $('e-run').disabled = true;
+    showMsg(msg, 'Encrypting…', 'ok');
+
+    const n = eBytes.length;
+    const idx = Array.from({length:n}, (_,i)=>i);
+    for(let i=0;i<count;i++){
+      const j = i + secureRandInt(n-i);
+      [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    const randomChosen = idx.slice(0, count);
+
+    // always fold in the file's own dimension/metadata bytes so a viewer
+    // can't read image size straight off the encrypted file
+    const metaPositions = metadataPositions(eBytes, eFormat).filter(p => p < n);
+    const chosenSet = new Set(randomChosen);
+    metaPositions.forEach(p => chosenSet.add(p));
+    const chosen = Array.from(chosenSet);
+
+    const masterKey = newMasterKey();
+    const keystream = await buildKeystreamCache(masterKey, chosen);
+
+    // ---------- merged mechanism: each chosen position is independently
+    // marked for either replace (in-place, same size) or delete (spliced
+    // out, shrinks file) with ~50/50 odds, decided per-position ----------
+    const replacePositions = [];
+    const deletePositions = [];
+    for(const pos of chosen){
+      if(secureRandInt(2) === 0) replacePositions.push(pos);
+      else deletePositions.push(pos);
+    }
+
+    const keyLines = [];
+
+    // 1) replace pass — in-place, order doesn't matter, indices don't shift
+    const out = new Uint8Array(eBytes);
+    for(const pos of replacePositions){
+      const orig = out[pos];
+      const stored = orig ^ keystream.byte(pos);
+      keyLines.push(`${pos},${stored.toString(16).padStart(2,'0')},r`);
+      out[pos] = secureRandInt(256); // random 0-255, never a fixed 0x00
+    }
+
+    // 2) delete pass — build the shrunk buffer in one O(n) sweep instead of
+    // repeated splice() calls (splice on a large array is O(n) per call,
+    // so doing it once per deleted byte was O(n * deletes) and would hang
+    // on big images). We still need descending order for the key's stored
+    // byte values only for readability; the actual removal below is a
+    // single linear pass using a lookup set.
+    const deleteSet = new Set(deletePositions);
+    for(const pos of deletePositions.slice().sort((a,b)=>b-a)){
+      const orig = out[pos];
+      const stored = orig ^ keystream.byte(pos);
+      keyLines.push(`${pos},${stored.toString(16).padStart(2,'0')},d`);
+    }
+    const finalOut = new Uint8Array(out.length - deletePositions.length);
+    { let w = 0;
+      for(let r=0; r<out.length; r++){
+        if(!deleteSet.has(r)) finalOut[w++] = out[r];
+      }
+    }
+
+    const final = $('e-marker').checked
+      ? (()=>{ const f = new Uint8Array(MARKER.length + finalOut.length); f.set(MARKER,0); f.set(finalOut,MARKER.length); return f; })()
+      : finalOut;
+
+    const keyText =
+      `AJAY\n` +
+      `file: ${eName}\n` +
+      `size: ${n}\n` +
+      `format: ${eFormat}\n` +
+      `mode: merged\n` +
+      `kdf: hmac-sha256\n` +
+      `count: ${chosen.length}\n` +
+      `key: ${bytesToHex(masterKey)}\n` +
+      keyLines.join('\n') + '\n';
+
+    const fBlob = new Blob([final], {type:'application/octet-stream'});
+    $('e-dl-file').href = URL.createObjectURL(fBlob);
+    $('e-dl-file').download = eName;
+
+    const kBlob = new Blob([keyText], {type:'text/plain'});
+    $('e-dl-key').href = URL.createObjectURL(kBlob);
+    $('e-dl-key').download = eName + '.key.txt';
+
+    $('e-result').classList.add('show');
+    const metaNote = metaPositions.length ? ` (incl. ${eFormat} dimensions)` : '';
+    showMsg(msg, `${chosen.length} positions secured${metaNote} (${replacePositions.length} replaced, ${deletePositions.length} deleted). Save the key before you reset.`, 'ok');
+    $('e-run').disabled = false;
+  });
+
+  // ---------- DECRYPT ----------
+  let dBytes = null, dName = '';
+  $('d-file').addEventListener('change', async e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    dBytes = new Uint8Array(await f.arrayBuffer());
+    dName = f.name;
+    $('d-fname').textContent = f.name + '  ·  ' + dBytes.length.toLocaleString() + ' bytes';
+    $('d-result').classList.remove('show');
+  });
+
+  $('d-keyfile').addEventListener('change', async e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    $('d-key').value = await f.text();
+  });
+
+  function parseKey(text){
+    const lines = text.split('\n').map(l=>l.trim());
+    const pairs = [];
+    let mode = 'replace';
+    let kdf = null;
+    let masterKey = null;
+    for(const line of lines){
+      if(line.startsWith('mode:')){ mode = line.slice(5).trim(); continue; }
+      if(line.startsWith('kdf:')){ kdf = line.slice(4).trim(); continue; }
+      if(line.startsWith('key:')){ masterKey = hexToBytes(line.slice(4).trim()); continue; }
+      if(!line || line==='AJAY' || line.startsWith('file:') || line.startsWith('size:') ||
+         line.startsWith('count:') || line.startsWith('format:')) continue;
+      const parts = line.split(',').map(s=>s.trim());
+      const posStr = parts[0], hexStr = parts[1];
+      // new format: position,hex,type(r/d) — old key files (pre-merge) omit
+      // the type field, so default missing type to the file's overall mode
+      const typeStr = parts[2] || (mode === 'delete' ? 'd' : 'r');
+      const pos = parseInt(posStr,10);
+      const val = parseInt(hexStr,16);
+      if(Number.isNaN(pos) || Number.isNaN(val)) throw new Error('Bad line: '+line);
+      pairs.push({position:pos, value:val, type: typeStr === 'd' ? 'd' : 'r'});
+    }
+    return {pairs, mode, kdf, masterKey};
+  }
+
+  $('d-run').addEventListener('click', async ()=>{
+    const msg = $('d-msg'); clearMsg(msg);
+    if(!dBytes){ showMsg(msg,'Choose a file first.','err'); return; }
+    const keyText = $('d-key').value.trim();
+    if(!keyText){ showMsg(msg,'Paste or upload the key.','err'); return; }
+
+    let pairs, mode, kdf, masterKey;
+    try{ ({pairs, mode, kdf, masterKey} = parseKey(keyText)); }
+    catch(err){ showMsg(msg,'Bad key data — '+err.message,'err'); return; }
+    if(pairs.length===0){ showMsg(msg,'No position,value lines found.','err'); return; }
+    if(!masterKey){ showMsg(msg,'Key text is missing the "key:" line.','err'); return; }
+    if(kdf !== 'hmac-sha256'){
+      showMsg(msg, 'This key file is from an older version of AJAY (pre-upgrade encryption) and is not supported by this decrypt engine. Re-encrypt the original file with the current version to get a compatible key.', 'err');
+      return;
+    }
+
+    $('d-run').disabled = true;
+    showMsg(msg, 'Decrypting…', 'ok');
+
+    const positions = pairs.map(p=>p.position);
+    const keystream = await buildKeystreamCache(masterKey, positions);
+    for(const p of pairs){ p.value = p.value ^ keystream.byte(p.position); }
+
+    let bytes = dBytes;
+    if(bytes.length >= 4){
+      const head = bytes.slice(0,4);
+      if(head[0]===0x41 && head[1]===0x4A && head[2]===0x41 && head[3]===0x59){
+        bytes = bytes.slice(4);
+      }
+    }
+
+    let out, bad = false;
+
+    if(mode === 'merged'){
+      // merged mechanism: undo deletes first (re-insert in the reverse of
+      // the order they were spliced out — i.e. lowest position first).
+      // Rebuild in one O(n) linear pass instead of repeated splice() calls
+      // (splice is O(n) per call and would hang on large buffers).
+      const deletePairs = pairs.filter(p=>p.type==='d').slice().sort((a,b)=>a.position-b.position);
+      const replacePairs = pairs.filter(p=>p.type==='r');
+      out = new Uint8Array(bytes.length + deletePairs.length);
+      { let src = 0, w = 0;
+        for(const p of deletePairs){
+          if(p.position < 0 || p.position > out.length){ bad = true; continue; }
+          const take = p.position - w;
+          if(take < 0 || src + take > bytes.length){ bad = true; continue; }
+          out.set(bytes.subarray(src, src+take), w);
+          w += take; src += take;
+          out[w++] = p.value;
+        }
+        if(src <= bytes.length) out.set(bytes.subarray(src), w);
+      }
+      for(const p of replacePairs){
+        if(p.position<0 || p.position>=out.length){ bad = true; continue; }
+        out[p.position] = p.value;
+      }
+    } else if(mode === 'delete'){
+      // legacy key files from before the merge — same single-pass rebuild
+      const rebuildOrder = pairs.slice().sort((a,b)=>a.position-b.position);
+      out = new Uint8Array(bytes.length + rebuildOrder.length);
+      { let src = 0, w = 0;
+        for(const p of rebuildOrder){
+          if(p.position < 0 || p.position > out.length){ bad = true; continue; }
+          const take = p.position - w;
+          if(take < 0 || src + take > bytes.length){ bad = true; continue; }
+          out.set(bytes.subarray(src, src+take), w);
+          w += take; src += take;
+          out[w++] = p.value;
+        }
+        if(src <= bytes.length) out.set(bytes.subarray(src), w);
+      }
+    } else {
+      // legacy key files from before the merge
+      out = new Uint8Array(bytes);
+      for(const p of pairs){
+        if(p.position<0 || p.position>=out.length){ bad = true; continue; }
+        out[p.position] = p.value;
+      }
+    }
+
+    const blob = new Blob([out], {type:'application/octet-stream'});
+    $('d-dl-file').href = URL.createObjectURL(blob);
+    $('d-dl-file').download = dName.replace(/\.ajay$/,'') || 'restored';
+
+    $('d-result').classList.add('show');
+    showMsg(msg, bad ? 'Restored — some key positions did not fit this file.' : 'Restored.', bad ? 'err' : 'ok');
+    $('d-run').disabled = false;
+  });
+
+  // ---------- RESET ----------
+  $('reset').addEventListener('click', ()=>{
+    eBytes=null; dBytes=null; eName=''; dName=''; eFormat=null;
+    $('e-file').value=''; $('d-file').value=''; $('d-keyfile').value='';
+    $('d-key').value=''; $('e-count').value='512'; $('e-marker').checked = true;
+    $('e-fname').textContent=''; $('d-fname').textContent='';
+    $('e-result').classList.remove('show'); $('d-result').classList.remove('show');
+    clearMsg($('e-msg')); clearMsg($('d-msg'));
+  });
+})();
+</script>
+</body>
+</html>
