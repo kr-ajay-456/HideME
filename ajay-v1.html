@@ -73,10 +73,7 @@
   .or{text-align:center;color:var(--grey);font-size:9.5px;letter-spacing:1.5px;margin:11px 0;text-transform:uppercase;}
 
   .modetoggle{display:flex;gap:8px;}
-  .modeopt{flex:1;position:relative;cursor:pointer;}
-  .modeopt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
   .modeopt-body{display:block;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;}
-  .modeopt input:checked + .modeopt-body{border-color:var(--gold);border-width:1.5px;}
   .modeopt-title{display:block;font-size:11.5px;font-weight:700;color:var(--blue);}
   .modeopt-desc{display:block;font-size:9.5px;color:var(--grey);margin-top:2px;}
 
@@ -119,7 +116,7 @@
 
   <header>
     <h1>AJAY<span>.</span></h1>
-    <div class="sub">jpg / jpeg / png &middot; the key stays with you</div>
+    <div class="sub">any file &middot; the key stays with you &middot; pen-and-paper compatible</div>
   </header>
 
   <div class="tabs">
@@ -130,14 +127,14 @@
   <!-- ENCRYPT -->
   <div class="section active" id="sec-e">
     <div class="field">
-      <label>Image (jpg / jpeg / png)</label>
-      <input type="file" id="e-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+      <label>File (any type)</label>
+      <input type="file" id="e-file">
       <div class="filename" id="e-fname"></div>
     </div>
 
     <div class="field">
       <label>Positions to scramble</label>
-      <input type="number" id="e-count" value="512" min="1">
+      <input type="number" id="e-count" value="500" min="1">
     </div>
 
     <div class="field">
@@ -145,7 +142,7 @@
       <div class="modetoggle" style="display:block;">
         <div class="modeopt-body">
           <span class="modeopt-title">Merged</span>
-          <span class="modeopt-desc">each position independently replaced or deleted (~50/50) &mdash; single pass, no shift/size choice needed</span>
+          <span class="modeopt-desc">each chosen position independently replaced or deleted (~50/50, CSPRNG-decided) &mdash; single pass, no manual mode choice needed</span>
         </div>
       </div>
     </div>
@@ -155,7 +152,7 @@
       <div class="modetoggle" style="display:block;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;">
           <input type="checkbox" id="e-marker" checked style="width:auto;margin:0;cursor:pointer;">
-          <span style="font-size:11px;color:var(--grey);">Add "AJAY" marker (identifies file as encrypted — recommended)</span>
+          <span style="font-size:11px;color:var(--grey);">Add "AJAY" header (41 4A 41 59) &mdash; identifies file as encrypted. Turn off for extra deniability.</span>
         </label>
       </div>
     </div>
@@ -218,6 +215,7 @@
   }
   function clearMsg(el){ el.className='msg'; el.textContent=''; }
 
+  // uniform random int in [0, max) via rejection sampling — no modulo bias
   function secureRandInt(max){
     const arr = new Uint32Array(1);
     const limit = Math.floor(0xFFFFFFFF / max) * max;
@@ -226,159 +224,27 @@
     return x % max;
   }
 
-  // ---------- key mechanism v2: 256-bit random session key + HMAC-SHA256
-  // keystream (Web Crypto). Unlike the old FNV-fold approach, every key
-  // byte is mixed by a proper cryptographic primitive with a full 256-bit
-  // internal state — no collapse to a small brute-forceable state space. ----------
-  function newMasterKey(){
-    const k = new Uint8Array(32); // 256-bit
-    crypto.getRandomValues(k);
-    return k;
-  }
-  function bytesToHex(b){
-    let s = '';
-    for(let i=0;i<b.length;i++) s += b[i].toString(16).padStart(2,'0');
-    return s;
-  }
-  function hexToBytes(hex){
-    hex = hex.trim();
-    const out = new Uint8Array(hex.length/2);
-    for(let i=0;i<out.length;i++) out[i] = parseInt(hex.substr(i*2,2),16);
+  function bytesToHex(b){ return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  function hexToBytes(s){
+    const out = new Uint8Array(s.length/2);
+    for(let i=0;i<out.length;i++) out[i] = parseInt(s.substr(i*2,2),16);
     return out;
   }
 
-  const BLOCK_SIZE = 32; // one SHA-256 HMAC output = 32 keystream bytes per block
-
-  async function importHmacKey(masterKey){
-    return crypto.subtle.importKey(
-      'raw', masterKey, {name:'HMAC', hash:'SHA-256'}, false, ['sign']
-    );
-  }
-
-  async function hmacBlock(cryptoKey, blockIndex){
-    const idxBuf = new Uint8Array(4);
-    idxBuf[0] = (blockIndex >>> 24) & 0xFF;
-    idxBuf[1] = (blockIndex >>> 16) & 0xFF;
-    idxBuf[2] = (blockIndex >>> 8) & 0xFF;
-    idxBuf[3] = blockIndex & 0xFF;
-    const sig = await crypto.subtle.sign('HMAC', cryptoKey, idxBuf);
-    return new Uint8Array(sig); // 32 bytes
-  }
-
-  // Precomputes and caches every HMAC block needed for a list of positions,
-  // so the actual encrypt/decrypt loop can look up keystream bytes
-  // synchronously afterward instead of awaiting per-byte.
-  async function buildKeystreamCache(masterKey, positions){
-    const cryptoKey = await importHmacKey(masterKey);
-    const neededBlocks = new Set();
-    for(const pos of positions) neededBlocks.add(Math.floor(pos / BLOCK_SIZE));
-    const blockIndices = Array.from(neededBlocks);
-    const blocks = await Promise.all(blockIndices.map(bi => hmacBlock(cryptoKey, bi)));
-    const cache = new Map();
-    for(let i=0;i<blockIndices.length;i++) cache.set(blockIndices[i], blocks[i]);
-    return {
-      byte(position){
-        const blockIndex = Math.floor(position / BLOCK_SIZE);
-        const offset = position % BLOCK_SIZE;
-        const block = cache.get(blockIndex);
-        if(!block) throw new Error('keystream block not precomputed for position '+position);
-        return block[offset];
-      }
-    };
-  }
-
-  // ---------- format detection + metadata (dimension) byte locations ----------
-  function detectFormat(bytes){
-    if(bytes.length>=8 && bytes[0]===0x89 && bytes[1]===0x50 && bytes[2]===0x4E && bytes[3]===0x47 &&
-       bytes[4]===0x0D && bytes[5]===0x0A && bytes[6]===0x1A && bytes[7]===0x0A) return 'png';
-    if(bytes.length>=3 && bytes[0]===0xFF && bytes[1]===0xD8 && bytes[2]===0xFF) return 'jpeg';
-    return null;
-  }
-
-  function pngMetadataPositions(bytes){
-    // walk every chunk; force-scramble IHDR's dimension/bitdepth/colortype
-    // fields plus the ENTIRE payload of every ancillary chunk (first byte
-    // of the 4-char type is lowercase per the PNG spec — covers tEXt,
-    // iTXt, eXIf, and vendor/private chunks like caBX/C2PA blocks too).
-    const forced = [];
-    if(bytes.length < 8) return forced;
-    let pos = 8;
-    while(pos + 8 <= bytes.length){
-      const length = ((bytes[pos]<<24) | (bytes[pos+1]<<16) | (bytes[pos+2]<<8) | bytes[pos+3]) >>> 0;
-      const t0 = bytes[pos+4], t1 = bytes[pos+5], t2 = bytes[pos+6], t3 = bytes[pos+7];
-      const dataStart = pos + 8;
-      const dataEnd = dataStart + length;
-      if(dataEnd + 4 > bytes.length) break; // malformed/truncated — stop walking
-      const isIHDR = (t0===0x49 && t1===0x48 && t2===0x44 && t3===0x52); // "IHDR"
-      const isIEND = (t0===0x49 && t1===0x45 && t2===0x4E && t3===0x44); // "IEND"
-      if(isIHDR){
-        for(let i=dataStart; i<dataStart+10 && i<dataEnd; i++) forced.push(i);
-      } else if((t0 & 0x20) !== 0){
-        // ancillary chunk — bit 5 of the first type byte is set (lowercase)
-        for(let i=dataStart; i<dataEnd; i++) forced.push(i);
-      }
-      pos = dataEnd + 4; // skip CRC
-      if(isIEND) break;
-    }
-    return forced;
-  }
-
-  function jpegMetadataPositions(bytes){
-    // walk every segment; force-scramble the SOF height/width fields plus
-    // the ENTIRE payload of every APPn (0xE0-0xEF, covers EXIF/XMP/C2PA)
-    // and COM (0xFE) segment.
-    const forced = [];
-    const SOF = new Set([0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF]);
-    let i = 2;
-    while(i < bytes.length - 1){
-      if(bytes[i] !== 0xFF){ i++; continue; }
-      const marker = bytes[i+1];
-      if(marker===0xD8 || marker===0x01 || (marker>=0xD0 && marker<=0xD7)){ i+=2; continue; }
-      if(marker===0xD9) break; // EOI
-      if(i+3 >= bytes.length) break;
-      const len = (bytes[i+2]<<8) | bytes[i+3];
-      const dataStart = i+4;
-      const dataEnd = i+2+len; // length field counts itself, so segment ends here
-      if(SOF.has(marker)){
-        forced.push(dataStart+1, dataStart+2, dataStart+3, dataStart+4); // height(2)+width(2)
-      }
-      if((marker>=0xE0 && marker<=0xEF) || marker===0xFE){
-        for(let p=dataStart; p<dataEnd && p<bytes.length; p++) forced.push(p);
-      }
-      if(marker===0xDA) break; // start-of-scan — no more header segments after this
-      i = dataEnd;
-    }
-    return forced;
-  }
-
-  function metadataPositions(bytes, format){
-    if(format==='png') return pngMetadataPositions(bytes);
-    if(format==='jpeg') return jpegMetadataPositions(bytes);
-    return [];
-  }
-
   // ---------- ENCRYPT ----------
-  let eBytes = null, eName = '', eFormat = null;
+  let eBytes = null, eName = '';
   $('e-file').addEventListener('change', async e=>{
     const f = e.target.files[0];
     if(!f) return;
-    const bytes = new Uint8Array(await f.arrayBuffer());
-    const format = detectFormat(bytes);
-    if(!format){
-      showMsg($('e-msg'), 'Only jpg, jpeg or png files are supported.', 'err');
-      e.target.value = '';
-      eBytes = null; eFormat = null; $('e-fname').textContent = '';
-      return;
-    }
-    clearMsg($('e-msg'));
-    eBytes = bytes; eName = f.name; eFormat = format;
-    $('e-fname').textContent = f.name + '  ·  ' + eBytes.length.toLocaleString() + ' bytes  ·  ' + format;
+    eBytes = new Uint8Array(await f.arrayBuffer());
+    eName = f.name;
+    $('e-fname').textContent = f.name + '  ·  ' + eBytes.length.toLocaleString() + ' bytes';
     $('e-result').classList.remove('show');
   });
 
-  $('e-run').addEventListener('click', async ()=>{
+  $('e-run').addEventListener('click', ()=>{
     const msg = $('e-msg'); clearMsg(msg);
-    if(!eBytes){ showMsg(msg,'Choose a jpg/jpeg/png file first.','err'); return; }
+    if(!eBytes){ showMsg(msg,'Choose a file first.','err'); return; }
     let count = parseInt($('e-count').value,10);
     if(!count || count<1){ showMsg(msg,'Enter a valid count.','err'); return; }
     if(count > eBytes.length){ showMsg(msg,`File only has ${eBytes.length} bytes.`,'err'); return; }
@@ -387,26 +253,18 @@
     showMsg(msg, 'Encrypting…', 'ok');
 
     const n = eBytes.length;
+
+    // pick `count` unique positions uniformly at random (partial Fisher-Yates)
     const idx = Array.from({length:n}, (_,i)=>i);
     for(let i=0;i<count;i++){
       const j = i + secureRandInt(n-i);
       [idx[i], idx[j]] = [idx[j], idx[i]];
     }
-    const randomChosen = idx.slice(0, count);
-
-    // always fold in the file's own dimension/metadata bytes so a viewer
-    // can't read image size straight off the encrypted file
-    const metaPositions = metadataPositions(eBytes, eFormat).filter(p => p < n);
-    const chosenSet = new Set(randomChosen);
-    metaPositions.forEach(p => chosenSet.add(p));
-    const chosen = Array.from(chosenSet);
-
-    const masterKey = newMasterKey();
-    const keystream = await buildKeystreamCache(masterKey, chosen);
+    const chosen = idx.slice(0, count);
 
     // ---------- merged mechanism: each chosen position is independently
     // marked for either replace (in-place, same size) or delete (spliced
-    // out, shrinks file) with ~50/50 odds, decided per-position ----------
+    // out, shrinks file) with ~50/50 odds, decided per-position via CSPRNG
     const replacePositions = [];
     const deletePositions = [];
     for(const pos of chosen){
@@ -415,28 +273,22 @@
     }
 
     const keyLines = [];
-
-    // 1) replace pass — in-place, order doesn't matter, indices don't shift
     const out = new Uint8Array(eBytes);
+
+    // 1) replace pass — in-place, order doesn't matter, indices don't shift.
+    // Overwrite value is a fresh random byte (0-255), never a fixed 0x00 —
+    // so a scrambled position never leaks "this was a replace" by pattern.
     for(const pos of replacePositions){
-      const orig = out[pos];
-      const stored = orig ^ keystream.byte(pos);
-      keyLines.push(`${pos},${stored.toString(16).padStart(2,'0')},r`);
-      out[pos] = secureRandInt(256); // random 0-255, never a fixed 0x00
+      keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},r`);
+      out[pos] = secureRandInt(256);
     }
 
     // 2) delete pass — build the shrunk buffer in one O(n) sweep instead of
-    // repeated splice() calls (splice on a large array is O(n) per call,
-    // so doing it once per deleted byte was O(n * deletes) and would hang
-    // on big images). We still need descending order for the key's stored
-    // byte values only for readability; the actual removal below is a
-    // single linear pass using a lookup set.
-    const deleteSet = new Set(deletePositions);
-    for(const pos of deletePositions.slice().sort((a,b)=>b-a)){
-      const orig = out[pos];
-      const stored = orig ^ keystream.byte(pos);
-      keyLines.push(`${pos},${stored.toString(16).padStart(2,'0')},d`);
+    // repeated splice() (splice is O(n) per call, would hang on large files)
+    for(const pos of deletePositions){
+      keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},d`);
     }
+    const deleteSet = new Set(deletePositions);
     const finalOut = new Uint8Array(out.length - deletePositions.length);
     { let w = 0;
       for(let r=0; r<out.length; r++){
@@ -444,19 +296,21 @@
       }
     }
 
-    const final = $('e-marker').checked
+    const addMarker = $('e-marker').checked;
+    const final = addMarker
       ? (()=>{ const f = new Uint8Array(MARKER.length + finalOut.length); f.set(MARKER,0); f.set(finalOut,MARKER.length); return f; })()
       : finalOut;
 
+    // plain, pen-and-paper key: every recorded byte is the literal original
+    // value at that position — nothing is derived or generated, so there is
+    // no cryptographic primitive here that a human can't reproduce by hand.
     const keyText =
       `AJAY\n` +
       `file: ${eName}\n` +
       `size: ${n}\n` +
-      `format: ${eFormat}\n` +
-      `mode: merged\n` +
-      `kdf: hmac-sha256\n` +
       `count: ${chosen.length}\n` +
-      `key: ${bytesToHex(masterKey)}\n` +
+      `mode: merged\n` +
+      `marker: ${addMarker ? 'yes' : 'no'}\n` +
       keyLines.join('\n') + '\n';
 
     const fBlob = new Blob([final], {type:'application/octet-stream'});
@@ -468,8 +322,7 @@
     $('e-dl-key').download = eName + '.key.txt';
 
     $('e-result').classList.add('show');
-    const metaNote = metaPositions.length ? ` (incl. ${eFormat} dimensions)` : '';
-    showMsg(msg, `${chosen.length} positions secured${metaNote} (${replacePositions.length} replaced, ${deletePositions.length} deleted). Save the key before you reset.`, 'ok');
+    showMsg(msg, `${chosen.length} positions secured (${replacePositions.length} replaced, ${deletePositions.length} deleted). Save the key before you reset.`, 'ok');
     $('e-run').disabled = false;
   });
 
@@ -493,66 +346,55 @@
   function parseKey(text){
     const lines = text.split('\n').map(l=>l.trim());
     const pairs = [];
-    let mode = 'replace';
-    let kdf = null;
-    let masterKey = null;
+    let mode = 'merged';
+    let marker = null;
     for(const line of lines){
       if(line.startsWith('mode:')){ mode = line.slice(5).trim(); continue; }
-      if(line.startsWith('kdf:')){ kdf = line.slice(4).trim(); continue; }
-      if(line.startsWith('key:')){ masterKey = hexToBytes(line.slice(4).trim()); continue; }
+      if(line.startsWith('marker:')){ marker = line.slice(7).trim(); continue; }
       if(!line || line==='AJAY' || line.startsWith('file:') || line.startsWith('size:') ||
-         line.startsWith('count:') || line.startsWith('format:')) continue;
+         line.startsWith('count:') || line.startsWith('kdf:') || line.startsWith('key:')) continue;
       const parts = line.split(',').map(s=>s.trim());
       const posStr = parts[0], hexStr = parts[1];
-      // new format: position,hex,type(r/d) — old key files (pre-merge) omit
-      // the type field, so default missing type to the file's overall mode
+      // old key files (pre-merge) omit the type field — default missing
+      // type to the file's overall mode so those still decrypt fine
       const typeStr = parts[2] || (mode === 'delete' ? 'd' : 'r');
       const pos = parseInt(posStr,10);
       const val = parseInt(hexStr,16);
       if(Number.isNaN(pos) || Number.isNaN(val)) throw new Error('Bad line: '+line);
       pairs.push({position:pos, value:val, type: typeStr === 'd' ? 'd' : 'r'});
     }
-    return {pairs, mode, kdf, masterKey};
+    return {pairs, mode, marker};
   }
 
-  $('d-run').addEventListener('click', async ()=>{
+  $('d-run').addEventListener('click', ()=>{
     const msg = $('d-msg'); clearMsg(msg);
     if(!dBytes){ showMsg(msg,'Choose a file first.','err'); return; }
     const keyText = $('d-key').value.trim();
     if(!keyText){ showMsg(msg,'Paste or upload the key.','err'); return; }
 
-    let pairs, mode, kdf, masterKey;
-    try{ ({pairs, mode, kdf, masterKey} = parseKey(keyText)); }
+    let pairs, mode, marker;
+    try{ ({pairs, mode, marker} = parseKey(keyText)); }
     catch(err){ showMsg(msg,'Bad key data — '+err.message,'err'); return; }
     if(pairs.length===0){ showMsg(msg,'No position,value lines found.','err'); return; }
-    if(!masterKey){ showMsg(msg,'Key text is missing the "key:" line.','err'); return; }
-    if(kdf !== 'hmac-sha256'){
-      showMsg(msg, 'This key file is from an older version of AJAY (pre-upgrade encryption) and is not supported by this decrypt engine. Re-encrypt the original file with the current version to get a compatible key.', 'err');
-      return;
-    }
 
     $('d-run').disabled = true;
     showMsg(msg, 'Decrypting…', 'ok');
 
-    const positions = pairs.map(p=>p.position);
-    const keystream = await buildKeystreamCache(masterKey, positions);
-    for(const p of pairs){ p.value = p.value ^ keystream.byte(p.position); }
-
     let bytes = dBytes;
-    if(bytes.length >= 4){
-      const head = bytes.slice(0,4);
-      if(head[0]===0x41 && head[1]===0x4A && head[2]===0x41 && head[3]===0x59){
-        bytes = bytes.slice(4);
-      }
+    // strip the AJAY header if the key says one was added, or if it's
+    // simply there (so files still decrypt even if the "marker:" line
+    // is missing from an older/hand-written key)
+    const looksMarked = bytes.length >= 4 && bytes[0]===0x41 && bytes[1]===0x4A && bytes[2]===0x41 && bytes[3]===0x59;
+    if(marker === 'yes' || (marker === null && looksMarked)){
+      bytes = bytes.slice(4);
     }
 
     let out, bad = false;
 
     if(mode === 'merged'){
-      // merged mechanism: undo deletes first (re-insert in the reverse of
-      // the order they were spliced out — i.e. lowest position first).
-      // Rebuild in one O(n) linear pass instead of repeated splice() calls
-      // (splice is O(n) per call and would hang on large buffers).
+      // undo deletes first — rebuild in one O(n) linear pass instead of
+      // repeated splice() calls, which is O(n) per call and would hang on
+      // large buffers
       const deletePairs = pairs.filter(p=>p.type==='d').slice().sort((a,b)=>a.position-b.position);
       const replacePairs = pairs.filter(p=>p.type==='r');
       out = new Uint8Array(bytes.length + deletePairs.length);
@@ -572,7 +414,7 @@
         out[p.position] = p.value;
       }
     } else if(mode === 'delete'){
-      // legacy key files from before the merge — same single-pass rebuild
+      // legacy key files (whole-file delete mode, pre-merge)
       const rebuildOrder = pairs.slice().sort((a,b)=>a.position-b.position);
       out = new Uint8Array(bytes.length + rebuildOrder.length);
       { let src = 0, w = 0;
@@ -587,7 +429,7 @@
         if(src <= bytes.length) out.set(bytes.subarray(src), w);
       }
     } else {
-      // legacy key files from before the merge
+      // legacy key files (whole-file replace mode, pre-merge)
       out = new Uint8Array(bytes);
       for(const p of pairs){
         if(p.position<0 || p.position>=out.length){ bad = true; continue; }
@@ -606,9 +448,9 @@
 
   // ---------- RESET ----------
   $('reset').addEventListener('click', ()=>{
-    eBytes=null; dBytes=null; eName=''; dName=''; eFormat=null;
+    eBytes=null; dBytes=null; eName=''; dName='';
     $('e-file').value=''; $('d-file').value=''; $('d-keyfile').value='';
-    $('d-key').value=''; $('e-count').value='512'; $('e-marker').checked = true;
+    $('d-key').value=''; $('e-count').value='500'; $('e-marker').checked = true;
     $('e-fname').textContent=''; $('d-fname').textContent='';
     $('e-result').classList.remove('show'); $('d-result').classList.remove('show');
     clearMsg($('e-msg')); clearMsg($('d-msg'));
