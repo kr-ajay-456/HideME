@@ -5,193 +5,227 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJAY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --white:#ffffff;
-    --ink:#0a0a0a;
-    --grey:#6b6b6b;
-    --hair:#e2e2e2;
-    --blue:#0e1f4d;
-    --gold:#c9a227;
-    --red:#a6192e;
+    --bg:#f2f2f7;
+    --card:#ffffff;
+    --ink:#000000;
+    --dim:#8e8e93;
+    --line:#e5e5ea;
+    --blue:#007aff;
+    --red:#ff3b30;
+    --green:#34c759;
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{
-    background:var(--white);
+    background:var(--bg);
     color:var(--ink);
-    font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;
-    font-size:13.5px;
-    line-height:1.5;
-    padding:36px 18px 70px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.4;
+    padding:28px 14px 60px;
+    -webkit-font-smoothing:antialiased;
   }
-  svg{display:block;}
   .wrap{max-width:420px;margin:0 auto;}
 
-  header{margin-bottom:28px;}
-  h1{font-size:20px;font-weight:700;color:var(--blue);letter-spacing:0.5px;}
-  h1 span{color:var(--gold);}
-  .sub{color:var(--grey);font-size:11px;margin-top:4px;}
+  header{padding:6px 8px 22px;}
+  h1{font-size:28px;font-weight:700;letter-spacing:-0.02em;}
+  .sub{color:var(--dim);font-size:14px;margin-top:3px;}
 
-  .tabs{display:flex;margin-bottom:22px;border-bottom:1.5px solid var(--hair);}
-  .tab{
-    flex:1;text-align:center;padding:10px 0;cursor:pointer;
-    color:var(--grey);font-size:12px;font-weight:600;letter-spacing:0.5px;
-    border-bottom:2px solid transparent;margin-bottom:-1.5px;
+  .segment{
+    display:flex;background:#e3e3e8;border-radius:9px;padding:2px;margin-bottom:22px;
   }
-  .tab.active{color:var(--blue);border-bottom-color:var(--gold);}
+  .tab{
+    flex:1;text-align:center;padding:6px 0;cursor:pointer;
+    font-size:13.5px;font-weight:600;color:var(--dim);border-radius:7px;
+    transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,0.08);}
 
   .section{display:none;}
   .section.active{display:block;}
 
-  .field{margin-bottom:16px;}
-  label{
-    display:block;font-size:10.5px;color:var(--blue);font-weight:700;
-    letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;
+  .card{
+    background:var(--card);border-radius:14px;margin-bottom:14px;overflow:hidden;
   }
+  .row{
+    padding:13px 15px;border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none;}
+  .row-label{font-size:11.5px;color:var(--dim);font-weight:500;text-transform:uppercase;letter-spacing:0.02em;margin-bottom:7px;}
 
   input[type=file]{
-    width:100%;font-size:11.5px;color:var(--grey);
-    border:1px solid var(--hair);border-radius:5px;padding:9px;background:var(--white);
+    width:100%;font-size:13.5px;color:var(--dim);
+    border:none;background:transparent;padding:0;font-family:inherit;
   }
   input[type=file]::file-selector-button{
-    font-family:inherit;font-size:11px;font-weight:700;color:var(--white);
-    background:var(--blue);border:none;border-radius:4px;padding:6px 11px;
-    margin-right:9px;cursor:pointer;
+    font-family:inherit;font-size:13px;font-weight:600;color:var(--blue);
+    background:#eaf2ff;border:none;border-radius:8px;padding:7px 13px;
+    margin-right:11px;cursor:pointer;
   }
 
-  input[type=number], textarea{
-    width:100%;padding:10px 12px;background:var(--white);
-    border:1px solid var(--hair);border-radius:5px;color:var(--ink);
-    font-family:inherit;font-size:12.5px;
+  input[type=number]{
+    width:100%;padding:0;background:transparent;border:none;color:var(--ink);
+    font-family:inherit;font-size:16px;font-weight:500;text-align:right;
   }
-  textarea{min-height:84px;font-size:10.5px;resize:vertical;line-height:1.6;}
-  input:focus, textarea:focus{outline:none;border-color:var(--blue);}
-  ::placeholder{color:#b0b0b0;}
+  input[type=number]:focus, textarea:focus{outline:none;}
+  .row.split{display:flex;align-items:center;justify-content:space-between;}
+  .row.split .row-label{margin-bottom:0;}
 
-  .filename{font-size:10.5px;color:var(--blue);margin-top:7px;font-weight:600;}
-  .or{text-align:center;color:var(--grey);font-size:9.5px;letter-spacing:1.5px;margin:11px 0;text-transform:uppercase;}
-
-  .modetoggle{display:flex;gap:8px;}
-  .modeopt-body{display:block;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;}
-  .modeopt-title{display:block;font-size:11.5px;font-weight:700;color:var(--blue);}
-  .modeopt-desc{display:block;font-size:9.5px;color:var(--grey);margin-top:2px;}
-
-  button{
-    width:100%;padding:12px;margin-top:6px;background:var(--blue);color:var(--white);
-    border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;
-    letter-spacing:0.5px;cursor:pointer;
+  textarea{
+    width:100%;padding:0;background:transparent;border:none;color:var(--ink);
+    font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12px;
+    min-height:70px;resize:vertical;line-height:1.6;
   }
-  button:hover{opacity:0.92;}
-  button:disabled{background:#c9c9c9;color:#8a8a8a;cursor:not-allowed;}
+  ::placeholder{color:#c7c7cc;}
 
-  .result{display:none;margin-top:18px;padding-top:18px;border-top:1.5px solid var(--hair);}
-  .result.show{display:block;}
-  .result .label{font-size:9.5px;color:var(--grey);letter-spacing:1.5px;margin-bottom:9px;text-transform:uppercase;}
+  .filename{font-size:12.5px;color:var(--blue);margin-top:6px;}
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row span{font-size:14.5px;}
+  .switch{position:relative;width:47px;height:27px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;position:absolute;}
+  .slider{
+    position:absolute;inset:0;background:#e5e5ea;border-radius:27px;cursor:pointer;
+    transition:background .2s;
+  }
+  .slider::before{
+    content:'';position:absolute;width:23px;height:23px;left:2px;top:2px;
+    background:#fff;border-radius:50%;transition:transform .2s;
+    box-shadow:0 3px 1px rgba(0,0,0,0.06),0 3px 8px rgba(0,0,0,0.15);
+  }
+  .switch input:checked + .slider{background:var(--green);}
+  .switch input:checked + .slider::before{transform:translateX(20px);}
+
+  .partfield{padding:13px 15px;border-top:1px solid var(--line);display:none;}
+  .partfield.show{display:block;}
+
+  button.run{
+    width:100%;padding:15px;margin-top:4px;background:var(--blue);color:#fff;
+    border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:600;
+    cursor:pointer;
+  }
+  button.run:active{opacity:0.75;}
+  button.run:disabled{background:#c7c7cc;cursor:not-allowed;}
+
+  .msg{display:none;font-size:13px;margin-top:11px;padding:0 4px;line-height:1.5;color:var(--dim);text-align:center;}
+  .msg.show{display:block;}
+  .msg.err{color:var(--red);}
 
   .dl{
     display:flex;align-items:center;justify-content:space-between;
-    padding:11px 13px;margin-bottom:8px;background:var(--white);
-    border:1.5px solid var(--gold);border-radius:6px;
-    color:var(--blue);text-decoration:none;font-size:11.5px;font-weight:700;
+    padding:14px 15px;text-decoration:none;color:var(--ink);font-size:14.5px;font-weight:500;
   }
-  .dl:hover{background:#fbf6e4;}
-
-  .msg{display:none;font-size:11px;margin-top:12px;padding:10px 12px;border-radius:6px;line-height:1.5;}
-  .msg.show{display:block;}
-  .msg.ok{background:#fbf6e4;color:#7a5f10;border:1px solid var(--gold);}
-  .msg.err{background:#fbeaec;color:var(--red);border:1px solid var(--red);}
+  .dl svg{flex-shrink:0;}
 
   .reset{
-    display:block;width:100%;margin-top:32px;padding:10px;background:none;
-    border:1px solid var(--hair);color:var(--grey);font-family:inherit;
-    font-size:10px;font-weight:700;letter-spacing:1px;border-radius:6px;
-    cursor:pointer;text-transform:uppercase;
+    display:block;width:100%;margin-top:26px;padding:14px;background:var(--card);
+    border:none;border-radius:14px;color:var(--red);font-family:inherit;
+    font-size:15px;font-weight:500;cursor:pointer;
   }
-  .reset:hover{border-color:var(--red);color:var(--red);}
+  .reset:active{opacity:0.6;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <h1>AJAY<span>.</span></h1>
-    <div class="sub">any file &middot; the key stays with you &middot; pen-and-paper compatible</div>
+    <h1>AJAY</h1>
+    <div class="sub">The key stays with you</div>
   </header>
 
-  <div class="tabs">
+  <div class="segment">
     <div class="tab active" data-t="e">Encrypt</div>
     <div class="tab" data-t="d">Decrypt</div>
   </div>
 
   <!-- ENCRYPT -->
   <div class="section active" id="sec-e">
-    <div class="field">
-      <label>File (any type)</label>
-      <input type="file" id="e-file">
-      <div class="filename" id="e-fname"></div>
-    </div>
 
-    <div class="field">
-      <label>Positions to scramble</label>
-      <input type="number" id="e-count" value="500" min="1">
-    </div>
-
-    <div class="field">
-      <label>Mode</label>
-      <div class="modetoggle" style="display:block;">
-        <div class="modeopt-body">
-          <span class="modeopt-title">Merged</span>
-          <span class="modeopt-desc">each chosen position independently replaced or deleted (~50/50, CSPRNG-decided) &mdash; single pass, no manual mode choice needed</span>
-        </div>
+    <div class="card">
+      <div class="row">
+        <div class="row-label">File</div>
+        <input type="file" id="e-file">
+        <div class="filename" id="e-fname"></div>
+      </div>
+      <div class="row split">
+        <div class="row-label">Positions to scramble</div>
+        <input type="number" id="e-count" value="500" min="1">
       </div>
     </div>
 
-    <div class="field">
-      <label>Marker</label>
-      <div class="modetoggle" style="display:block;">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 11px;border:1px solid var(--hair);border-radius:5px;">
-          <input type="checkbox" id="e-marker" checked style="width:auto;margin:0;cursor:pointer;">
-          <span style="font-size:11px;color:var(--grey);">Add "AJAY" header (41 4A 41 59) &mdash; identifies file as encrypted. Turn off for extra deniability.</span>
+    <div class="card">
+      <div class="toggle-row">
+        <span>Add AJAY header</span>
+        <label class="switch">
+          <input type="checkbox" id="e-marker" checked>
+          <span class="slider"></span>
         </label>
       </div>
+      <div class="toggle-row">
+        <span>Rename output</span>
+        <label class="switch">
+          <input type="checkbox" id="e-datename">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="partfield" id="e-part-wrap">
+        <div class="row-label">Part number (DD-MM-YYYY&nbsp;&nbsp;#N)</div>
+        <input type="number" id="e-part" value="1" min="1" placeholder="#" style="text-align:left;margin-top:4px;">
+      </div>
     </div>
 
-    <button id="e-run">Encrypt</button>
+    <button class="run" id="e-run">Encrypt</button>
     <div class="msg" id="e-msg"></div>
 
-    <div class="result" id="e-result">
-      <div class="label">Output</div>
-      <a class="dl" id="e-dl-file" download>Encrypted file &darr;</a>
-      <a class="dl" id="e-dl-key" download>Key (.txt) &darr;</a>
+    <div class="card" id="e-result" style="display:none;margin-top:18px;">
+      <a class="dl" id="e-dl-file" download>
+        Encrypted file
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2.2"><path d="M12 3v13m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      </a>
+      <a class="dl" id="e-dl-key" download>
+        Key (.txt)
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2.2"><path d="M12 3v13m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      </a>
     </div>
   </div>
 
   <!-- DECRYPT -->
   <div class="section" id="sec-d">
-    <div class="field">
-      <label>File</label>
-      <input type="file" id="d-file">
-      <div class="filename" id="d-fname"></div>
+
+    <div class="card">
+      <div class="row">
+        <div class="row-label">File</div>
+        <input type="file" id="d-file">
+        <div class="filename" id="d-fname"></div>
+      </div>
     </div>
 
-    <div class="field">
-      <label>Key</label>
-      <textarea id="d-key" placeholder="paste key text"></textarea>
-      <div class="or">or</div>
-      <input type="file" id="d-keyfile" accept=".txt">
+    <div class="card">
+      <div class="row">
+        <div class="row-label">Key</div>
+        <textarea id="d-key" placeholder="Paste key text"></textarea>
+      </div>
+      <div class="row">
+        <div class="row-label">Or upload key file</div>
+        <input type="file" id="d-keyfile" accept=".txt">
+      </div>
     </div>
 
-    <button id="d-run">Decrypt</button>
+    <button class="run" id="d-run">Decrypt</button>
     <div class="msg" id="d-msg"></div>
 
-    <div class="result" id="d-result">
-      <div class="label">Output</div>
-      <a class="dl" id="d-dl-file" download>Restored file &darr;</a>
+    <div class="card" id="d-result" style="display:none;margin-top:18px;">
+      <a class="dl" id="d-dl-file" download>
+        Restored file
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2.2"><path d="M12 3v13m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      </a>
     </div>
   </div>
 
-  <button class="reset" id="reset">Reset session</button>
+  <button class="reset" id="reset">Reset Session</button>
 
 </div>
 
@@ -200,35 +234,39 @@
   const $ = id => document.getElementById(id);
   const MARKER = new Uint8Array([0x41,0x4A,0x41,0x59]); // "AJAY"
 
+  const dateNameBox = document.getElementById('e-datename');
+  if(dateNameBox){
+    dateNameBox.addEventListener('change', ()=>{
+      document.getElementById('e-part-wrap').classList.toggle('show', dateNameBox.checked);
+    });
+  }
+
+  function ddmmyyyy(){
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
   document.querySelectorAll('.tab').forEach(t=>{
     t.addEventListener('click', ()=>{
       document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
       document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
       t.classList.add('active');
-      $('sec-'+t.dataset.t).classList.add('active');
+      $('sec-' + t.dataset.t).classList.add('active');
     });
   });
 
-  function showMsg(el, text, kind){
-    el.textContent = text;
-    el.className = 'msg show ' + kind;
-  }
-  function clearMsg(el){ el.className='msg'; el.textContent=''; }
+  function showMsg(el, txt, type){ el.textContent = txt; el.className = 'msg show ' + (type==='err'?'err':''); }
+  function clearMsg(el){ el.className = 'msg'; el.textContent = ''; }
 
-  // uniform random int in [0, max) via rejection sampling — no modulo bias
   function secureRandInt(max){
     const arr = new Uint32Array(1);
     const limit = Math.floor(0xFFFFFFFF / max) * max;
     let x;
     do { crypto.getRandomValues(arr); x = arr[0]; } while (x >= limit);
     return x % max;
-  }
-
-  function bytesToHex(b){ return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); }
-  function hexToBytes(s){
-    const out = new Uint8Array(s.length/2);
-    for(let i=0;i<out.length;i++) out[i] = parseInt(s.substr(i*2,2),16);
-    return out;
   }
 
   // ---------- ENCRYPT ----------
@@ -239,22 +277,19 @@
     eBytes = new Uint8Array(await f.arrayBuffer());
     eName = f.name;
     $('e-fname').textContent = f.name + '  ·  ' + eBytes.length.toLocaleString() + ' bytes';
-    $('e-result').classList.remove('show');
+    $('e-result').style.display = 'none';
   });
 
   $('e-run').addEventListener('click', ()=>{
     const msg = $('e-msg'); clearMsg(msg);
-    if(!eBytes){ showMsg(msg,'Choose a file first.','err'); return; }
-    let count = parseInt($('e-count').value,10);
-    if(!count || count<1){ showMsg(msg,'Enter a valid count.','err'); return; }
-    if(count > eBytes.length){ showMsg(msg,`File only has ${eBytes.length} bytes.`,'err'); return; }
+    if(!eBytes){ showMsg(msg, 'Choose a file first.', 'err'); return; }
+    const count = parseInt($('e-count').value);
+    if(!count || count < 1){ showMsg(msg, 'Enter a valid count.', 'err'); return; }
+    const n = eBytes.length;
+    if(count > n){ showMsg(msg, 'Count exceeds file size.', 'err'); return; }
 
     $('e-run').disabled = true;
-    showMsg(msg, 'Encrypting…', 'ok');
 
-    const n = eBytes.length;
-
-    // pick `count` unique positions uniformly at random (partial Fisher-Yates)
     const idx = Array.from({length:n}, (_,i)=>i);
     for(let i=0;i<count;i++){
       const j = i + secureRandInt(n-i);
@@ -262,9 +297,6 @@
     }
     const chosen = idx.slice(0, count);
 
-    // ---------- merged mechanism: each chosen position is independently
-    // marked for either replace (in-place, same size) or delete (spliced
-    // out, shrinks file) with ~50/50 odds, decided per-position via CSPRNG
     const replacePositions = [];
     const deletePositions = [];
     for(const pos of chosen){
@@ -275,16 +307,10 @@
     const keyLines = [];
     const out = new Uint8Array(eBytes);
 
-    // 1) replace pass — in-place, order doesn't matter, indices don't shift.
-    // Overwrite value is a fresh random byte (0-255), never a fixed 0x00 —
-    // so a scrambled position never leaks "this was a replace" by pattern.
     for(const pos of replacePositions){
       keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},r`);
       out[pos] = secureRandInt(256);
     }
-
-    // 2) delete pass — build the shrunk buffer in one O(n) sweep instead of
-    // repeated splice() (splice is O(n) per call, would hang on large files)
     for(const pos of deletePositions){
       keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},d`);
     }
@@ -301,9 +327,6 @@
       ? (()=>{ const f = new Uint8Array(MARKER.length + finalOut.length); f.set(MARKER,0); f.set(finalOut,MARKER.length); return f; })()
       : finalOut;
 
-    // plain, pen-and-paper key: every recorded byte is the literal original
-    // value at that position — nothing is derived or generated, so there is
-    // no cryptographic primitive here that a human can't reproduce by hand.
     const keyText =
       `AJAY\n` +
       `file: ${eName}\n` +
@@ -313,16 +336,23 @@
       `marker: ${addMarker ? 'yes' : 'no'}\n` +
       keyLines.join('\n') + '\n';
 
+    const useDateName = $('e-datename').checked;
+    const extMatch = eName.match(/\.[^.]+$/);
+    const ext = extMatch ? extMatch[0] : '';
+    const outName = useDateName
+      ? `${ddmmyyyy()}  #${$('e-part').value || '1'}${ext}`
+      : eName;
+
     const fBlob = new Blob([final], {type:'application/octet-stream'});
     $('e-dl-file').href = URL.createObjectURL(fBlob);
-    $('e-dl-file').download = eName;
+    $('e-dl-file').download = outName;
 
     const kBlob = new Blob([keyText], {type:'text/plain'});
     $('e-dl-key').href = URL.createObjectURL(kBlob);
-    $('e-dl-key').download = eName + '.key.txt';
+    $('e-dl-key').download = outName + '.key.txt';
 
-    $('e-result').classList.add('show');
-    showMsg(msg, `${chosen.length} positions secured (${replacePositions.length} replaced, ${deletePositions.length} deleted). Save the key before you reset.`, 'ok');
+    $('e-result').style.display = 'block';
+    showMsg(msg, `${chosen.length} positions secured (${replacePositions.length} replaced, ${deletePositions.length} deleted). Save the key before you reset.`);
     $('e-run').disabled = false;
   });
 
@@ -334,7 +364,7 @@
     dBytes = new Uint8Array(await f.arrayBuffer());
     dName = f.name;
     $('d-fname').textContent = f.name + '  ·  ' + dBytes.length.toLocaleString() + ' bytes';
-    $('d-result').classList.remove('show');
+    $('d-result').style.display = 'none';
   });
 
   $('d-keyfile').addEventListener('change', async e=>{
@@ -355,8 +385,6 @@
          line.startsWith('count:') || line.startsWith('kdf:') || line.startsWith('key:')) continue;
       const parts = line.split(',').map(s=>s.trim());
       const posStr = parts[0], hexStr = parts[1];
-      // old key files (pre-merge) omit the type field — default missing
-      // type to the file's overall mode so those still decrypt fine
       const typeStr = parts[2] || (mode === 'delete' ? 'd' : 'r');
       const pos = parseInt(posStr,10);
       const val = parseInt(hexStr,16);
@@ -378,12 +406,9 @@
     if(pairs.length===0){ showMsg(msg,'No position,value lines found.','err'); return; }
 
     $('d-run').disabled = true;
-    showMsg(msg, 'Decrypting…', 'ok');
+    showMsg(msg, 'Decrypting…');
 
     let bytes = dBytes;
-    // strip the AJAY header if the key says one was added, or if it's
-    // simply there (so files still decrypt even if the "marker:" line
-    // is missing from an older/hand-written key)
     const looksMarked = bytes.length >= 4 && bytes[0]===0x41 && bytes[1]===0x4A && bytes[2]===0x41 && bytes[3]===0x59;
     if(marker === 'yes' || (marker === null && looksMarked)){
       bytes = bytes.slice(4);
@@ -392,9 +417,6 @@
     let out, bad = false;
 
     if(mode === 'merged'){
-      // undo deletes first — rebuild in one O(n) linear pass instead of
-      // repeated splice() calls, which is O(n) per call and would hang on
-      // large buffers
       const deletePairs = pairs.filter(p=>p.type==='d').slice().sort((a,b)=>a.position-b.position);
       const replacePairs = pairs.filter(p=>p.type==='r');
       out = new Uint8Array(bytes.length + deletePairs.length);
@@ -414,7 +436,6 @@
         out[p.position] = p.value;
       }
     } else if(mode === 'delete'){
-      // legacy key files (whole-file delete mode, pre-merge)
       const rebuildOrder = pairs.slice().sort((a,b)=>a.position-b.position);
       out = new Uint8Array(bytes.length + rebuildOrder.length);
       { let src = 0, w = 0;
@@ -429,7 +450,6 @@
         if(src <= bytes.length) out.set(bytes.subarray(src), w);
       }
     } else {
-      // legacy key files (whole-file replace mode, pre-merge)
       out = new Uint8Array(bytes);
       for(const p of pairs){
         if(p.position<0 || p.position>=out.length){ bad = true; continue; }
@@ -441,8 +461,8 @@
     $('d-dl-file').href = URL.createObjectURL(blob);
     $('d-dl-file').download = dName.replace(/\.ajay$/,'') || 'restored';
 
-    $('d-result').classList.add('show');
-    showMsg(msg, bad ? 'Restored — some key positions did not fit this file.' : 'Restored.', bad ? 'err' : 'ok');
+    $('d-result').style.display = 'block';
+    showMsg(msg, bad ? 'Restored — some key positions did not fit this file.' : 'Restored.', bad ? 'err' : '');
     $('d-run').disabled = false;
   });
 
@@ -451,8 +471,10 @@
     eBytes=null; dBytes=null; eName=''; dName='';
     $('e-file').value=''; $('d-file').value=''; $('d-keyfile').value='';
     $('d-key').value=''; $('e-count').value='500'; $('e-marker').checked = true;
+    $('e-datename').checked = false; $('e-part').value = '1';
+    document.getElementById('e-part-wrap').classList.remove('show');
     $('e-fname').textContent=''; $('d-fname').textContent='';
-    $('e-result').classList.remove('show'); $('d-result').classList.remove('show');
+    $('e-result').style.display = 'none'; $('d-result').style.display = 'none';
     clearMsg($('e-msg')); clearMsg($('d-msg'));
   });
 })();
