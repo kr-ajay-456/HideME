@@ -100,7 +100,7 @@ marker: yes
 
 | Platform | Handle |
 |:---:|:---:|
-| 𝕏 **X** | [@kr_ajay_456](https://x.com/kr_ajay_456) |
+| 𝕏  | [@kr_ajay_456](https://x.com/kr_ajay_456) |
 | 🐙 **GitHub** | [kr-ajay-456](https://github.com/kr-ajay-456) |
 | 📸 **Instagram** | [kr_ajay_456](https://instagram.com/kr_ajay_456) |
 | ✈️ **Telegram** | [kr_ajay_456](https://t.me/kr_ajay_456) |
