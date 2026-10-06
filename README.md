@@ -113,8 +113,8 @@ marker: yes
 
 <div align="center">
 
-**Idea & Design:** Ajay Kumar (ARK) · **Code:** Claude (Anthropic)
+**Idea & Design:** AJAY KUMAR · **Code:** Claude (Anthropic)
 
-Made with ❤️ by **Ajay**
+Made with ❤️ by **AJAY**
 
 </div>
