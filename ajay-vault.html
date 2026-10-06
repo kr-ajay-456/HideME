@@ -82,6 +82,9 @@
     .row:has(> .filename:not(:empty))::after{content:'Change file';background:#f3faea;box-shadow:inset 0 6px 0 #c4e29f;border-color:#b5d78d;color:var(--green-t);}
     .row:has(> input[type=file]):has(> .filename) > .row-label{order:0;}
     .row:has(> input[type=file]):has(> .filename) > .filename{order:2;}
+    .row:has(> input[type=file]):has(> .filename) > .prog{order:3;}
+    .row.keyrow:has(> input[type=file]):has(> .filename)::after{content:'Tap to choose key file (.ark)';}
+    .row.keyrow:has(> .filename:not(:empty)):has(> input[type=file])::after{content:'Change key file';background:#f3faea;box-shadow:inset 0 6px 0 #c4e29f;border-color:#b5d78d;color:var(--green-t);}
   }
 
   /* toggle: track with red / green knob */
@@ -194,6 +197,31 @@
   .size-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
   .size-row input{flex:1;accent-color:var(--red);}
   .size-row b{font-family:var(--mono);font-size:13px;width:44px;text-align:right;}
+
+  /* scroll UI (red pill thumb on a grey track) */
+  html{scrollbar-width:none;}
+  html::-webkit-scrollbar{display:none;}
+  .about-scroll,textarea{scrollbar-width:thin;scrollbar-color:var(--red) #d4cfc2;}
+  .about-scroll::-webkit-scrollbar,textarea::-webkit-scrollbar{width:9px;height:9px;}
+  .about-scroll::-webkit-scrollbar-track,textarea::-webkit-scrollbar-track{background:#d4cfc2;border-radius:5px;box-shadow:inset 0 1px 0 rgba(0,0,0,.14);}
+  .about-scroll::-webkit-scrollbar-thumb,textarea::-webkit-scrollbar-thumb{background:var(--red);border-radius:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 var(--red-d);}
+  .vscroll{position:fixed;right:3px;top:max(14px,env(safe-area-inset-top,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));width:16px;z-index:40;opacity:0;pointer-events:none;transition:opacity .3s;touch-action:none;display:none;}
+  .vscroll.show{opacity:1;pointer-events:auto;}
+  .vscroll::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:6px;margin-left:-3px;border-radius:3px;background:#d4cfc2;box-shadow:inset 0 1px 0 rgba(0,0,0,.16),0 1px 0 rgba(255,255,255,.7);}
+  .vs-thumb{position:absolute;left:2px;right:2px;top:0;height:60px;border-radius:7px;background:var(--red);cursor:grab;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 3px 0 var(--red-d),0 5px 0 rgba(120,80,40,.18);}
+  .vs-thumb:active{cursor:grabbing;}
+
+  /* progress */
+  .prog{display:none;margin-top:14px;padding:12px 14px 14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 3px 0 var(--ledge),0 5px 0 var(--ledge2);}
+  .prog.show{display:block;animation:rise .35s cubic-bezier(.2,.8,.2,1) both;}
+  .prog-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:9px;}
+  .prog-top b{font-size:16px;color:var(--red-d);}
+  .prog-track{height:12px;border-radius:6px;background:var(--white);border:1px solid var(--line);box-shadow:inset 0 2px 0 #e3dccd;overflow:hidden;}
+  .prog-fill{height:100%;width:0;border-radius:6px;transition:width .2s ease-out;
+    background:repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 8px,transparent 8px 16px),var(--red);background-size:22px 22px,auto;animation:stripe .8s linear infinite;}
+  @keyframes stripe{to{background-position:22px 0,0 0}}
+  .prog-hint{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:9px;text-align:center;}
 
   /* split slider */
   .split-card .row-label b{color:var(--ink);}
@@ -357,6 +385,11 @@
     </div>
 
     <button class="run" id="e-run">Encrypt</button>
+    <div class="prog" id="e-prog">
+      <div class="prog-top"><span id="e-prog-l">Shuru ho raha hai…</span><b id="e-prog-p">0%</b></div>
+      <div class="prog-track"><div class="prog-fill" id="e-prog-f"></div></div>
+      <div class="prog-hint" id="e-prog-h">Badi file hai to thoda time lagega, page band mat karna</div>
+    </div>
     <div class="msg" id="e-msg"></div>
   </div>
 
@@ -376,13 +409,24 @@
         <div class="row-label">Key</div>
         <textarea id="d-key" placeholder="Paste key text"></textarea>
       </div>
-      <div class="row">
+      <div class="row keyrow">
         <div class="row-label">Or upload key file</div>
-        <input type="file" id="d-keyfile" accept=".txt">
+        <input type="file" id="d-keyfile" accept=".ark,.zip,.txt">
+        <div class="filename" id="d-kname"></div>
+        <div class="prog" id="k-prog">
+          <div class="prog-top"><span id="k-prog-l">Key padh raha hai…</span><b id="k-prog-p">0%</b></div>
+          <div class="prog-track"><div class="prog-fill" id="k-prog-f"></div></div>
+          <div class="prog-hint" id="k-prog-h">Badi key hai to thoda time lagega</div>
+        </div>
       </div>
     </div>
 
     <button class="run" id="d-run">Decrypt</button>
+    <div class="prog" id="d-prog">
+      <div class="prog-top"><span id="d-prog-l">Shuru ho raha hai…</span><b id="d-prog-p">0%</b></div>
+      <div class="prog-track"><div class="prog-fill" id="d-prog-f"></div></div>
+      <div class="prog-hint" id="d-prog-h">Badi file hai to thoda time lagega, page band mat karna</div>
+    </div>
     <div class="msg" id="d-msg"></div>
   </div>
 
@@ -394,6 +438,8 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="vscroll" id="vs" aria-hidden="true"><div class="vs-thumb" id="vs-thumb"></div></div>
 
 <!-- ENCRYPT RESULT SHEET -->
 <div class="sheet-overlay" id="e-sheet">
@@ -424,7 +470,7 @@
         </div>
         <div class="dl-text">
           <div class="dl-title">Key file</div>
-          <div class="dl-meta">Needed to restore later</div>
+          <div class="dl-meta" id="e-meta-key">Needed to restore later</div>
         </div>
         <div class="dl-go key"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg></div>
       </a>
@@ -735,12 +781,88 @@
   customBox.addEventListener('change', syncCustom);
   paintRatio();
 
+  // progress helper: paints at most every ~40ms and gives the browser a frame so the page never freezes
+  const frame = ()=> new Promise(r=>{ let d=false; const g=()=>{ if(!d){ d=true; r(); } }; requestAnimationFrame(g); setTimeout(g,60); });
+  function makeProg(x){
+    const box=$(x+'-prog'), f=$(x+'-prog-f'), pc=$(x+'-prog-p'), lb=$(x+'-prog-l'), h=$(x+'-prog-h');
+    let last = 0;
+    const paint = (v,l)=>{ f.style.width = v+'%'; pc.textContent = Math.round(v)+'%'; if(l) lb.textContent = l; };
+    return {
+      start(size){ h.style.display = size > 1048576 ? '' : 'none'; box.classList.add('show'); paint(0,'Shuru ho raha hai…'); last = 0; },
+      async tick(v,l){ if(performance.now()-last < 40) return; paint(v,l); await frame(); last = performance.now(); },
+      async done(){ paint(100,'Ho gaya ✓'); await frame(); },
+      hide(delay){ setTimeout(()=>box.classList.remove('show'), delay||0); }
+    };
+  }
+  const eProg = makeProg('e'), dProg = makeProg('d'), kProg = makeProg('k');
+
+  const _ra = new Uint32Array(1);
   function secureRandInt(max){
-    const arr = new Uint32Array(1);
+    const arr = _ra;
     const limit = Math.floor(0xFFFFFFFF / max) * max;
     let x;
     do { crypto.getRandomValues(arr); x = arr[0]; } while (x >= limit);
     return x % max;
+  }
+
+  // ---------- ZIP KEY (.ark = standard zip holding key.txt) ----------
+  const CRC_T = (()=>{ const t = new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+  function crc32(u8){ let c = 0xFFFFFFFF; for(let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+  async function streamBytes(u8, tf, onP, total){
+    const rd = new Blob([u8]).stream().pipeThrough(tf).getReader(), parts = [];
+    let len = 0;
+    for(;;){
+      const {done, value} = await rd.read();
+      if(done) break;
+      parts.push(value); len += value.length;
+      if(onP) await onP(Math.min(1, len/(total||len||1)));
+    }
+    const out = new Uint8Array(len); let o = 0;
+    for(const c of parts){ out.set(c, o); o += c.length; }
+    return out;
+  }
+  // decode big text in 1 MB slices so the page keeps responding
+  async function decodeText(u8, pg, from, to){
+    if(!pg) return new TextDecoder().decode(u8);
+    const td = new TextDecoder(), step = 1 << 20, out = [];
+    for(let i=0; i<u8.length; i+=step){
+      out.push(td.decode(u8.subarray(i, i+step), {stream:true}));
+      await pg.tick(from+(to-from)*i/u8.length, 'Text decode ho raha hai…');
+    }
+    out.push(td.decode());
+    return out.join('');
+  }
+  async function makeArk(text){
+    const raw = new TextEncoder().encode(text), nm = new TextEncoder().encode('key.txt');
+    let data = raw, method = 0;
+    if(typeof CompressionStream !== 'undefined'){
+      try{ const z = await streamBytes(raw, new CompressionStream('deflate-raw')); if(z.length < raw.length){ data = z; method = 8; } }catch(_){}
+    }
+    const crc = crc32(raw), d = new Date();
+    const tm = (d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1), dt = ((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+    const lh = new DataView(new ArrayBuffer(30)), ch = new DataView(new ArrayBuffer(46)), ee = new DataView(new ArrayBuffer(22));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(8,method,true); lh.setUint16(10,tm,true); lh.setUint16(12,dt,true);
+    lh.setUint32(14,crc,true); lh.setUint32(18,data.length,true); lh.setUint32(22,raw.length,true); lh.setUint16(26,nm.length,true);
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(10,method,true); ch.setUint16(12,tm,true); ch.setUint16(14,dt,true);
+    ch.setUint32(16,crc,true); ch.setUint32(20,data.length,true); ch.setUint32(24,raw.length,true); ch.setUint16(28,nm.length,true);
+    ee.setUint32(0,0x06054b50,true); ee.setUint16(8,1,true); ee.setUint16(10,1,true); ee.setUint32(12,46+nm.length,true); ee.setUint32(16,30+nm.length+data.length,true);
+    return new Blob([lh,nm,data,ch,nm,ee],{type:'application/octet-stream'});
+  }
+  async function readArk(u8, pg){
+    const v = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    let e = u8.length - 22;
+    while(e >= 0 && v.getUint32(e,true) !== 0x06054b50) e--;
+    if(e < 0) throw new Error('Ye valid .ark / zip file nahi hai');
+    const c = v.getUint32(e+16,true);
+    const method = v.getUint16(c+10,true), csize = v.getUint32(c+20,true), lo = v.getUint32(c+42,true);
+    const ds = lo + 30 + v.getUint16(lo+26,true) + v.getUint16(lo+28,true);
+    const body = u8.subarray(ds, ds+csize);
+    if(method === 0) return decodeText(body, pg, 80, 100);
+    if(method !== 8 || typeof DecompressionStream === 'undefined') throw new Error('Is browser mein .ark khul nahi sakti, browser update karo');
+    const usize = v.getUint32(c+24,true);
+    const raw = await streamBytes(body, new DecompressionStream('deflate-raw'),
+      pg ? (f)=>pg.tick(35+45*f, 'Key unzip ho rahi hai…') : null, usize);
+    return decodeText(raw, pg, 80, 100);
   }
 
   // ---------- ENCRYPT ----------
@@ -768,7 +890,7 @@
     closeSheet($('e-sheet'));
   });
 
-  $('e-run').addEventListener('click', ()=>{
+  $('e-run').addEventListener('click', async ()=>{
     const msg = $('e-msg'); clearMsg(msg);
     if(!eBytes){ showMsg(msg, 'Choose a file first.', 'err'); return; }
     // editable: use the typed value, fall back to the auto value if the box is empty
@@ -784,80 +906,94 @@
     if(count > n){ showMsg(msg, 'Count exceeds file size.', 'err'); return; }
 
     $('e-run').disabled = true;
-
-    const idx = Array.from({length:n}, (_,i)=>i);
-    for(let i=0;i<count;i++){
-      const j = i + secureRandInt(n-i);
-      [idx[i], idx[j]] = [idx[j], idx[i]];
-    }
-    const chosen = idx.slice(0, count);
-
-    const replacePositions = [];
-    const deletePositions = [];
-    if(customBox.checked){
-      // chosen[] is already a random shuffle, so the first K are a fair random subset
-      const k = Math.round(chosen.length * Number(ratioIn.value) / 100);
-      for(let i=0;i<chosen.length;i++){
-        (i < k ? replacePositions : deletePositions).push(chosen[i]);
+    eProg.start(n);
+    try{
+      // 1) pick random positions (partial Fisher-Yates)            0 - 40%
+      const idx = new Uint32Array(n);
+      for(let i=0;i<n;i++) idx[i] = i;
+      for(let i=0;i<count;i++){
+        const j = i + secureRandInt(n-i);
+        const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+        if((i & 2047) === 0) await eProg.tick(40*i/count, 'Positions chun raha hai…');
       }
-    } else {
-      for(const pos of chosen){
-        if(secureRandInt(2) === 0) replacePositions.push(pos);
-        else deletePositions.push(pos);
+      const chosen = idx.subarray(0, count);
+
+      // 2) split into replace / delete                              40 - 55%
+      const replacePositions = [], deletePositions = [];
+      const k = customBox.checked ? Math.round(count * Number(ratioIn.value) / 100) : -1;
+      for(let i=0;i<count;i++){
+        const pos = chosen[i];
+        const toReplace = k >= 0 ? (i < k) : (secureRandInt(2) === 0);   // chosen[] is already a random shuffle
+        (toReplace ? replacePositions : deletePositions).push(pos);
+        if((i & 4095) === 0) await eProg.tick(40+15*i/count, 'Replace / Delete baant raha hai…');
       }
-    }
 
-    const keyLines = [];
-    const out = new Uint8Array(eBytes);
-
-    for(const pos of replacePositions){
-      keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},r`);
-      out[pos] = secureRandInt(256);
-    }
-    for(const pos of deletePositions){
-      keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},d`);
-    }
-    const deleteSet = new Set(deletePositions);
-    const finalOut = new Uint8Array(out.length - deletePositions.length);
-    { let w = 0;
-      for(let r=0; r<out.length; r++){
-        if(!deleteSet.has(r)) finalOut[w++] = out[r];
+      // 3) apply replacements + build key                           55 - 75%
+      const keyLines = [];
+      const out = new Uint8Array(eBytes);
+      for(let i=0;i<replacePositions.length;i++){
+        const pos = replacePositions[i];
+        keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},r`);
+        out[pos] = secureRandInt(256);
+        if((i & 2047) === 0) await eProg.tick(55+10*i/replacePositions.length, 'Bytes replace ho rahe hain…');
       }
+      for(let i=0;i<deletePositions.length;i++){
+        const pos = deletePositions[i];
+        keyLines.push(`${pos},${eBytes[pos].toString(16).padStart(2,'0')},d`);
+        if((i & 4095) === 0) await eProg.tick(65+10*i/deletePositions.length, 'Key ban rahi hai…');
+      }
+
+      // 4) remove deleted bytes                                     75 - 95%
+      const deleteSet = new Set(deletePositions);
+      const finalOut = new Uint8Array(out.length - deletePositions.length);
+      { let w = 0;
+        for(let r=0; r<out.length; r++){
+          if(!deleteSet.has(r)) finalOut[w++] = out[r];
+          if((r & 16383) === 0) await eProg.tick(75+20*r/out.length, 'Bytes delete ho rahe hain…');
+        }
+      }
+
+      await eProg.tick(96, 'File taiyaar ho rahi hai…');
+      const addMarker = $('e-marker').checked;
+      const final = addMarker
+        ? (()=>{ const f = new Uint8Array(MARKER.length + finalOut.length); f.set(MARKER,0); f.set(finalOut,MARKER.length); return f; })()
+        : finalOut;
+
+      const keyText =
+        `AJAY\n` +
+        `file: ${eName}\n` +
+        `size: ${n}\n` +
+        `count: ${count}\n` +
+        `mode: merged\n` +
+        `marker: ${addMarker ? 'yes' : 'no'}\n` +
+        keyLines.join('\n') + '\n';
+
+      const useDateName = $('e-datename').checked;
+      const extMatch = eName.match(/\.[^.]+$/);
+      const ext = extMatch ? extMatch[0] : '';
+      const outName = useDateName
+        ? `${ddmmyyyy()}  #${$('e-part').value || '1'}${ext}`
+        : eName;
+
+      const fBlob = new Blob([final], {type:'application/octet-stream'});
+      $('e-dl-file').href = URL.createObjectURL(fBlob);
+      $('e-dl-file').download = outName;
+
+      await eProg.tick(98, 'Key compress ho rahi hai…');
+      const kBlob = await makeArk(keyText);
+      const keyName = `${ddmmyyyy()} #${$('e-part').value || '1'}.ark`;
+      $('e-dl-key').href = URL.createObjectURL(kBlob);
+      $('e-dl-key').download = keyName;
+      $('e-meta-key').textContent = keyName + '  ·  ' + kBlob.size.toLocaleString() + ' bytes (compressed)';
+
+      $('e-meta-file').textContent = outName + '  ·  ' + final.length.toLocaleString() + ' bytes';
+      $('e-sheet-sub').textContent = `${count} positions secured — ${replacePositions.length} replaced, ${deletePositions.length} deleted`;
+      await eProg.done();
+      openSheet($('e-sheet'));
+    }catch(err){
+      showMsg(msg, 'Something went wrong — ' + err.message, 'err');
     }
-
-    const addMarker = $('e-marker').checked;
-    const final = addMarker
-      ? (()=>{ const f = new Uint8Array(MARKER.length + finalOut.length); f.set(MARKER,0); f.set(finalOut,MARKER.length); return f; })()
-      : finalOut;
-
-    const keyText =
-      `AJAY\n` +
-      `file: ${eName}\n` +
-      `size: ${n}\n` +
-      `count: ${chosen.length}\n` +
-      `mode: merged\n` +
-      `marker: ${addMarker ? 'yes' : 'no'}\n` +
-      keyLines.join('\n') + '\n';
-
-    const useDateName = $('e-datename').checked;
-    const extMatch = eName.match(/\.[^.]+$/);
-    const ext = extMatch ? extMatch[0] : '';
-    const outName = useDateName
-      ? `${ddmmyyyy()}  #${$('e-part').value || '1'}${ext}`
-      : eName;
-
-    const fBlob = new Blob([final], {type:'application/octet-stream'});
-    $('e-dl-file').href = URL.createObjectURL(fBlob);
-    $('e-dl-file').download = outName;
-
-    const kBlob = new Blob([keyText], {type:'text/plain'});
-    $('e-dl-key').href = URL.createObjectURL(kBlob);
-    $('e-dl-key').download = outName + '.key.txt';
-
-    $('e-meta-file').textContent = outName + '  ·  ' + final.length.toLocaleString() + ' bytes';
-    $('e-sheet-sub').textContent = `${chosen.length} positions secured — ${replacePositions.length} replaced, ${deletePositions.length} deleted`;
-    openSheet($('e-sheet'));
-    clearMsg(msg);
+    eProg.hide(500);
     $('e-run').disabled = false;
   });
 
@@ -872,18 +1008,59 @@
     closeSheet($('d-sheet'));
   });
 
+  // big keys live in memory; the textarea only shows a short summary (a 10 MB textarea would hang the page)
+  let dKeyData = null;
+  $('d-key').addEventListener('input', ()=>{ dKeyData = null; });
+  $('d-key').addEventListener('focus', e=>{ if(dKeyData) e.target.select(); });
   $('d-keyfile').addEventListener('change', async e=>{
     const f = e.target.files[0];
     if(!f) return;
-    $('d-key').value = await f.text();
+    clearMsg($('d-msg'));
+    kProg.start(f.size);
+    try{
+      // 1) read the file in chunks                                   0 - 35%
+      let u8;
+      if(f.stream){
+        const rd = f.stream().getReader(), parts = []; let got = 0;
+        for(;;){
+          const {done, value} = await rd.read();
+          if(done) break;
+          parts.push(value); got += value.length;
+          await kProg.tick(35*got/(f.size||1), 'File padh raha hai…');
+        }
+        u8 = new Uint8Array(got); let o = 0;
+        for(const c of parts){ u8.set(c, o); o += c.length; }
+      } else {
+        u8 = new Uint8Array(await f.arrayBuffer());
+      }
+      // 2) unzip (.ark / .zip) or plain text                        35 - 100%
+      const isZip = u8.length > 4 && u8[0]===0x50 && u8[1]===0x4B && u8[2]===0x03 && u8[3]===0x04;
+      const text = isZip ? await readArk(u8, kProg) : await decodeText(u8, kProg, 35, 100);
+      if(text.length > 200000){
+        dKeyData = text;
+        $('d-key').value = `✓ Key loaded: ${f.name}\n${text.length.toLocaleString()} characters · ${(text.match(/\n/g)||[]).length.toLocaleString()} lines`;
+      } else {
+        dKeyData = null;
+        $('d-key').value = text;
+      }
+      $('d-kname').textContent = f.name + '  ·  ' + f.size.toLocaleString() + ' bytes';
+      await kProg.done();
+    }catch(err){
+      dKeyData = null; $('d-kname').textContent = '';
+      e.target.value = '';
+      showMsg($('d-msg'), 'Key file nahi padh paaye — ' + err.message, 'err');
+    }
+    kProg.hide(500);
   });
 
-  function parseKey(text){
-    const lines = text.split('\n').map(l=>l.trim());
+  async function parseKey(text){
+    const lines = text.split('\n');
     const pairs = [];
     let mode = 'merged';
     let marker = null;
-    for(const line of lines){
+    for(let li=0; li<lines.length; li++){
+      if((li & 4095) === 0) await dProg.tick(25*li/lines.length, 'Key padh raha hai…');
+      const line = lines[li].trim();
       if(line.startsWith('mode:')){ mode = line.slice(5).trim(); continue; }
       if(line.startsWith('marker:')){ marker = line.slice(7).trim(); continue; }
       if(!line || line==='AJAY' || line.startsWith('file:') || line.startsWith('size:') ||
@@ -899,81 +1076,120 @@
     return {pairs, mode, marker};
   }
 
-  $('d-run').addEventListener('click', ()=>{
+  // put deleted bytes back at their original positions (from..to = progress range)
+  async function reinsert(bytes, delPairs, from, to){
+    const sorted = delPairs.slice().sort((a,b)=>a.position-b.position);
+    const out = new Uint8Array(bytes.length + sorted.length);
+    let bad = false, src = 0, w = 0;
+    for(let i=0; i<sorted.length; i++){
+      if((i & 1023) === 0) await dProg.tick(from+(to-from)*i/sorted.length, 'File rebuild ho rahi hai…');
+      const p = sorted[i];
+      if(p.position < 0 || p.position > out.length){ bad = true; continue; }
+      const take = p.position - w;
+      if(take < 0 || src + take > bytes.length){ bad = true; continue; }
+      out.set(bytes.subarray(src, src+take), w);
+      w += take; src += take;
+      out[w++] = p.value;
+    }
+    if(src <= bytes.length) out.set(bytes.subarray(src), w);
+    return {out, bad};
+  }
+
+  async function overwrite(out, pairs, from, to){
+    let bad = false;
+    for(let i=0; i<pairs.length; i++){
+      if((i & 4095) === 0) await dProg.tick(from+(to-from)*i/pairs.length, 'Original bytes wapas aa rahe hain…');
+      const p = pairs[i];
+      if(p.position<0 || p.position>=out.length){ bad = true; continue; }
+      out[p.position] = p.value;
+    }
+    return bad;
+  }
+
+  $('d-run').addEventListener('click', async ()=>{
     const msg = $('d-msg'); clearMsg(msg);
     if(!dBytes){ showMsg(msg,'Choose a file first.','err'); return; }
-    const keyText = $('d-key').value.trim();
+    const keyText = (dKeyData || $('d-key').value).trim();
     if(!keyText){ showMsg(msg,'Paste or upload the key.','err'); return; }
 
-    let pairs, mode, marker;
-    try{ ({pairs, mode, marker} = parseKey(keyText)); }
-    catch(err){ showMsg(msg,'Bad key data — '+err.message,'err'); return; }
-    if(pairs.length===0){ showMsg(msg,'No position,value lines found.','err'); return; }
-
     $('d-run').disabled = true;
-    showMsg(msg, 'Decrypting…');
+    dProg.start(Math.max(dBytes.length, keyText.length));
+    try{
+      let pairs, mode, marker;
+      try{ ({pairs, mode, marker} = await parseKey(keyText)); }
+      catch(err){ showMsg(msg,'Bad key data — '+err.message,'err'); return; }
+      if(pairs.length===0){ showMsg(msg,'No position,value lines found.','err'); return; }
 
-    let bytes = dBytes;
-    const looksMarked = bytes.length >= 4 && bytes[0]===0x41 && bytes[1]===0x4A && bytes[2]===0x41 && bytes[3]===0x59;
-    if(marker === 'yes' || (marker === null && looksMarked)){
-      bytes = bytes.slice(4);
+      let bytes = dBytes;
+      const looksMarked = bytes.length >= 4 && bytes[0]===0x41 && bytes[1]===0x4A && bytes[2]===0x41 && bytes[3]===0x59;
+      if(marker === 'yes' || (marker === null && looksMarked)) bytes = bytes.slice(4);
+
+      let out, bad = false, r;
+      if(mode === 'merged'){
+        r = await reinsert(bytes, pairs.filter(p=>p.type==='d'), 25, 75);
+        out = r.out; bad = r.bad;
+        if(await overwrite(out, pairs.filter(p=>p.type==='r'), 75, 97)) bad = true;
+      } else if(mode === 'delete'){
+        r = await reinsert(bytes, pairs, 25, 97);
+        out = r.out; bad = r.bad;
+      } else {
+        out = new Uint8Array(bytes);
+        bad = await overwrite(out, pairs, 25, 97);
+      }
+
+      await dProg.tick(98, 'File taiyaar ho rahi hai…');
+      const blob = new Blob([out], {type:'application/octet-stream'});
+      const outFileName = dName.replace(/\.ajay$/,'') || 'restored';
+      $('d-dl-file').href = URL.createObjectURL(blob);
+      $('d-dl-file').download = outFileName;
+
+      $('d-sheet-sub').textContent = bad
+        ? 'Restored, but some key positions did not fit this file'
+        : outFileName + '  ·  ' + out.length.toLocaleString() + ' bytes';
+      await dProg.done();
+      openSheet($('d-sheet'));
+    }catch(err){
+      showMsg(msg, 'Something went wrong — ' + err.message, 'err');
+    }finally{
+      dProg.hide(500);
+      $('d-run').disabled = false;
     }
-
-    let out, bad = false;
-
-    if(mode === 'merged'){
-      const deletePairs = pairs.filter(p=>p.type==='d').slice().sort((a,b)=>a.position-b.position);
-      const replacePairs = pairs.filter(p=>p.type==='r');
-      out = new Uint8Array(bytes.length + deletePairs.length);
-      { let src = 0, w = 0;
-        for(const p of deletePairs){
-          if(p.position < 0 || p.position > out.length){ bad = true; continue; }
-          const take = p.position - w;
-          if(take < 0 || src + take > bytes.length){ bad = true; continue; }
-          out.set(bytes.subarray(src, src+take), w);
-          w += take; src += take;
-          out[w++] = p.value;
-        }
-        if(src <= bytes.length) out.set(bytes.subarray(src), w);
-      }
-      for(const p of replacePairs){
-        if(p.position<0 || p.position>=out.length){ bad = true; continue; }
-        out[p.position] = p.value;
-      }
-    } else if(mode === 'delete'){
-      const rebuildOrder = pairs.slice().sort((a,b)=>a.position-b.position);
-      out = new Uint8Array(bytes.length + rebuildOrder.length);
-      { let src = 0, w = 0;
-        for(const p of rebuildOrder){
-          if(p.position < 0 || p.position > out.length){ bad = true; continue; }
-          const take = p.position - w;
-          if(take < 0 || src + take > bytes.length){ bad = true; continue; }
-          out.set(bytes.subarray(src, src+take), w);
-          w += take; src += take;
-          out[w++] = p.value;
-        }
-        if(src <= bytes.length) out.set(bytes.subarray(src), w);
-      }
-    } else {
-      out = new Uint8Array(bytes);
-      for(const p of pairs){
-        if(p.position<0 || p.position>=out.length){ bad = true; continue; }
-        out[p.position] = p.value;
-      }
-    }
-
-    const blob = new Blob([out], {type:'application/octet-stream'});
-    const outFileName = dName.replace(/\.ajay$/,'') || 'restored';
-    $('d-dl-file').href = URL.createObjectURL(blob);
-    $('d-dl-file').download = outFileName;
-
-    $('d-sheet-sub').textContent = bad
-      ? 'Restored, but some key positions did not fit this file'
-      : outFileName + '  ·  ' + out.length.toLocaleString() + ' bytes';
-    openSheet($('d-sheet'));
-    clearMsg(msg);
-    $('d-run').disabled = false;
   });
+
+  // ---------- PAGE SCROLL UI ----------
+  const vs = $('vs'), vt = $('vs-thumb'), de = document.documentElement;
+  let vsHide, vsDrag = null;
+  function vsUpdate(){
+    const H = de.clientHeight, T = de.scrollHeight;
+    if(T <= H + 2){ vs.style.display = 'none'; vs.classList.remove('show'); return false; }
+    vs.style.display = 'block';
+    const tr = vs.clientHeight, th = Math.max(44, tr*H/T);
+    vt.style.height = th + 'px';
+    vt.style.transform = `translateY(${(tr-th) * (de.scrollTop/(T-H))}px)`;
+    return true;
+  }
+  function vsFlash(){
+    if(!vsUpdate()) return;
+    vs.classList.add('show');
+    clearTimeout(vsHide);
+    vsHide = setTimeout(()=>{ if(!vsDrag) vs.classList.remove('show'); }, 1300);
+  }
+  function vsMove(y){   // y = pointer position inside the track, thumb centred on it
+    const tr = vs.clientHeight, th = vt.offsetHeight, H = de.clientHeight, T = de.scrollHeight;
+    const r = Math.min(1, Math.max(0, (y - th/2) / (tr - th)));
+    de.scrollTop = r * (T - H);
+  }
+  addEventListener('scroll', vsFlash, {passive:true});
+  addEventListener('resize', vsUpdate);
+  new ResizeObserver(vsUpdate).observe(document.body);
+  vs.addEventListener('pointerdown', e=>{
+    e.preventDefault(); vs.setPointerCapture(e.pointerId); vsDrag = true;
+    clearTimeout(vsHide); vs.classList.add('show');
+    vsMove(e.clientY - vs.getBoundingClientRect().top);
+  });
+  vs.addEventListener('pointermove', e=>{ if(vsDrag) vsMove(e.clientY - vs.getBoundingClientRect().top); });
+  ['pointerup','pointercancel'].forEach(ev=>vs.addEventListener(ev, ()=>{ vsDrag = null; vsFlash(); }));
+  vsUpdate();
 
   // ---------- SHEET CLOSE ----------
   $('e-sheet-close').addEventListener('click', ()=> closeSheet($('e-sheet')));
@@ -989,8 +1205,8 @@
   // ---------- RESET ----------
   $('reset').addEventListener('click', ()=>{
     eBytes=null; dBytes=null; eName=''; dName='';
-    $('e-file').value=''; $('d-file').value=''; $('d-keyfile').value='';
-    $('d-key').value=''; $('e-count').value=''; eAutoN=0; $('e-marker').checked = true;
+    $('e-file').value=''; $('d-file').value=''; $('d-keyfile').value=''; $('d-kname').textContent='';
+    $('d-key').value=''; dKeyData=null; $('e-count').value=''; eAutoN=0; $('e-marker').checked = true;
     $('e-datename').checked = false; $('e-part').value = '1';
     document.getElementById('e-part-wrap').classList.remove('show');
     customBox.checked=false; ratioIn.value=50; paintRatio(); syncCustom(); applyDefaults();

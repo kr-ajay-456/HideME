@@ -39,7 +39,9 @@ Chuni hui har position ke saath ek of do kaam hote hain:
 Default mein har position ka Replace/Delete **random 50/50** decide hota hai. Chaho to **Custom Replace / Delete** toggle on karke slider se ratio set kar sakte ho.
 
 ### 3️⃣ Key banana
-Har change ki asli value `position,value,type` format mein key file mein likhi jaati hai. Ye key ke bina kisi ko nahi milti.
+Har change ki asli value `position,value,type` format mein key mein likhi jaati hai. Phir ye text **deflate se compress** hoke ek `.ark` file (standard zip, andar `key.txt`) ban jaati hai, to badi files pe bhi key heavy nahi hoti. Ye key ke bina kisi ko nahi milti.
+
+Key ke andar ka text aisa dikhta hai:
 
 ```
 AJAY
@@ -69,8 +71,13 @@ marker: yes
 - 🎯 **Auto count** (10–15%) ya **manual count** apni marzi se
 - 🏷️ **AJAY header toggle** → encrypted file ke start mein `AJAY` marker (`41 4A 41 59`) add karna ya nahi
 - 📅 **Rename output** → `DD-MM-YYYY  #N` format mein file ka naam
-- 🗝️ **Key file download** + Decrypt ke time key **paste** ya **upload** dono ka option
+- 🗜️ **Compressed key** → key ab `.ark` (zip) mein aati hai, txt se bahut chhoti. Naam: `DD-MM-YYYY #N.ark`
+- 🗝️ Decrypt ke time key **paste** ya **upload** (`.ark`, `.zip`, `.txt`) dono ka option
 - 📴 **100% offline** → file aur key browser se bahar kabhi nahi jaati
+- ⏳ **Progress bar** → Encrypt, Decrypt aur key upload teeno mein live percentage aur step ka naam dikhta hai, badi file pe bhi page atakta nahi
+- 📦 **Badi key ka smart handling** → bahut badi key ka text memory mein rehta hai, sirf chhota summary dikhta hai, isliye page hang nahi hota
+- ⚙️ **Settings** → apni preferences set karo (default toggles, vibration, animations, text size), sab browser mein save rehti hain
+- 🔓 **Lock icon pe tap** karke chhota sa surprise milta hai
 - 🧹 **Reset Session** ek click mein sab clear
 - 📱 Mobile pe bhi smooth chalta hai
 
@@ -82,12 +89,12 @@ marker: yes
 1. `ajay-vault.html` browser mein kholo
 2. File choose karo (max **5 MB**)
 3. Count check karo, Replace/Delete ratio chaho to set karo
-4. **Encrypt** dabao, phir **encrypted file** aur **key file** dono download karo
+4. **Encrypt** dabao, progress bar poora hone ke baad **encrypted file** aur **key file** (`.ark`) dono download karo
 
 **Decrypt**
 1. **Decrypt** tab pe jao
 2. Encrypted file choose karo
-3. Key paste karo ya key file upload karo
+3. Key paste karo ya key file (`.ark`) upload karo, upload ke saath progress bar chalta dikhega
 4. **Decrypt** dabao, original file download karo
 
 > ⚠️ **Key sambhal ke rakhna.** Key kho gayi to file kabhi restore nahi hogi.
@@ -100,12 +107,12 @@ marker: yes
 
 | Platform | Handle |
 |:---:|:---:|
-| 𝕏  | [@kr_ajay_456](https://x.com/kr_ajay_456) |
+| 𝕏 | [@kr_ajay_456](https://x.com/kr_ajay_456) |
 | 🐙 **GitHub** | [kr-ajay-456](https://github.com/kr-ajay-456) |
-| 📸 **Instagram** | [kr_ajay_456](https://instagram.com/kr_ajay_456) |
+| 📸 **Insta** | [kr_ajay_456](https://instagram.com/kr_ajay_456) |
 | ✈️ **Telegram** | [kr_ajay_456](https://t.me/kr_ajay_456) |
-| 📧 **Email** | kr.ajaychauhaan@gmail.com |
-| 📧 **Email (alt)** | Dinno@duck.com |
+| 📧 | kr.ajaychauhaan@gmail.com |
+| 📧 **Alt** | Dinno@duck.com |
 
 </div>
 
@@ -113,7 +120,7 @@ marker: yes
 
 <div align="center">
 
-**Idea & Design:** AJAY KUMAR · **Code:** Claude (Anthropic)
+**Idea & Design:** AJAY KUMAR (ARK) · **Code:** Claude (Anthropic)
 
 Made with ❤️ by **AJAY**
 
