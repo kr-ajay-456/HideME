@@ -107,12 +107,12 @@ marker: yes
 
 | Platform | Handle |
 |:---:|:---:|
-| 𝕏 | [@kr_ajay_456](https://x.com/kr_ajay_456) |
+| 𝕏 **X** | [@kr_ajay_456](https://x.com/kr_ajay_456) |
 | 🐙 **GitHub** | [kr-ajay-456](https://github.com/kr-ajay-456) |
-| 📸 **Insta** | [kr_ajay_456](https://instagram.com/kr_ajay_456) |
+| 📸 **Instagram** | [kr_ajay_456](https://instagram.com/kr_ajay_456) |
 | ✈️ **Telegram** | [kr_ajay_456](https://t.me/kr_ajay_456) |
-| 📧 | kr.ajaychauhaan@gmail.com |
-| 📧 **Alt** | Dinno@duck.com |
+| 📧 **Email** | kr.ajaychauhaan@gmail.com |
+| 📧 **Email (alt)** | Dinno@duck.com |
 
 </div>
 
@@ -120,8 +120,8 @@ marker: yes
 
 <div align="center">
 
-**Idea & Design:** AJAY KUMAR (ARK) · **Code:** Claude (Anthropic)
+**Idea & Design:** Ajay Kumar (ARK) · **Code:** Claude (Anthropic)
 
-Made with ❤️ by **AJAY**
+Made with ❤️ by **Ajay**
 
 </div>
